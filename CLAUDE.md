@@ -2,20 +2,27 @@
 
 ## Status: Deprecated — Use otvp-app Instead
 
-This was the original static page deployed to Vercel to display envelope status for the 11 OTVP security controls. It has been superseded by **otvp-app**, which adds authentication, agent triggering, and dynamic rendering.
+Single static HTML file (`index.html`, 52KB) originally deployed to Vercel to display trust envelope status for the 11 OTVP security controls. Superseded by **otvp-app**, which adds Supabase auth, agent triggering, and dynamic rendering.
+
+## Repository Structure
+
+```
+otvp-dashboard/
+├── index.html         # Static dashboard (52KB)
+└── CLAUDE.md
+```
 
 ## Keep For
 
-- Reference implementation for envelope display logic
-- Quick testing of static layouts
+- Reference for envelope display logic
+- Quick static testing
 - Fallback if otvp-app has issues
 
 ## Do Not
 
 - Add new features here — they go in otvp-app
 - Deploy to production — otvp-app is the production interface
-- Invest significant development time here
 
 ## Context
 
-See `~/otvp-projects/CLAUDE.md` for the full OTVP system overview and how the repos relate.
+See `~/otvp-projects/CLAUDE.md` for the full OTVP system overview.
