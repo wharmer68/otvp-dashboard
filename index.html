@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OTVP Trust Dashboard — Killswitch Advisory</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#06060b;color:#fafafa;font-family:'Inter','Helvetica Neue',sans-serif}
+.mono{font-family:'JetBrains Mono','Fira Code',monospace}
+.container{max-width:1100px;margin:0 auto;padding:32px 24px}
+
+.header{margin-bottom:32px}
+.header-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.logo{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff}
+.header-title{font-size:22px;font-weight:700;letter-spacing:-0.5px;background:linear-gradient(135deg,#e4e4e7,#a1a1aa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-sub{color:#52525b;font-size:13px;margin-left:48px}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:#0a0a0f;border:1px solid #1e1e2e;border-radius:8px;padding:14px 16px}
+.stat-label{color:#52525b;font-size:9px;letter-spacing:1.5px;margin-bottom:6px}
+.stat-value{font-size:26px;font-weight:700}
+.stat-value.small{font-size:12px}
+
+.upload-zone{border:1px dashed #27272a;border-radius:8px;padding:16px;text-align:center;cursor:pointer;margin-bottom:28px;transition:all 0.2s}
+.upload-zone.dragover{border-color:#6366f1;background:#0f0f1a}
+.upload-zone span{color:#52525b;font-size:13px}
+.upload-zone.dragover span{color:#818cf8}
+
+.envelope{background:#0a0a0f;border-radius:12px;overflow:hidden;margin-bottom:20px}
+.envelope-header{padding:24px 28px;border-bottom:1px solid #1e1e2e;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px}
+.envelope-badges{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.envelope-label{color:#71717a;font-size:10px;letter-spacing:2px}
+.soc2-badge{padding:2px 8px;border-radius:3px;background:#1e1b4b;color:#818cf8;font-size:11px;font-weight:700;letter-spacing:0.5px}
+.envelope-title{color:#fafafa;font-size:20px;font-weight:600;margin-bottom:4px}
+.envelope-meta{color:#52525b;font-size:12px}
+
+.gauge{display:flex;flex-direction:column;align-items:center;gap:8px}
+.gauge-label{padding:4px 14px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+
+.metrics{padding:20px 28px;display:flex;gap:16px;flex-wrap:wrap;border-bottom:1px solid #1e1e2e}
+.metric{background:#111118;border:1px solid #27272a;border-radius:6px;padding:10px 16px;min-width:80px}
+.metric-label{color:#52525b;font-size:9px;letter-spacing:1.5px;margin-bottom:4px}
+.metric-value{font-size:22px;font-weight:700}
+
+.merkle-bar{padding:12px 28px;border-bottom:1px solid #1e1e2e;display:flex;align-items:center;gap:10px}
+.merkle-icon{color:#6366f1;font-size:14px}
+.merkle-label{color:#71717a;font-size:10px;letter-spacing:1.5px}
+.merkle-hash{color:#6366f1;font-size:11px;opacity:0.8}
+
+.claims-section{padding:20px 28px}
+.claims-label{color:#71717a;font-size:10px;letter-spacing:2px;margin-bottom:14px}
+
+.claim{background:#111118;border:1px solid #27272a;border-radius:8px;overflow:hidden;margin-bottom:8px}
+.claim-header{padding:16px 20px;cursor:pointer;display:flex;align-items:flex-start;gap:14px}
+.claim-icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;margin-top:2px}
+.claim-badges{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.result-badge{padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;letter-spacing:1px}
+.claim-conf{color:#a1a1aa;font-size:12px}
+.claim-soc2{padding:2px 6px;border-radius:3px;background:#1e1b4b;color:#818cf8;font-size:10px;font-weight:600}
+.claim-assertion{color:#e4e4e7;font-size:14px;font-weight:500;margin-bottom:4px;line-height:1.4}
+.claim-domain{color:#52525b;font-size:12px}
+.claim-arrow{color:#52525b;font-size:18px;transition:transform 0.2s}
+.claim-arrow.open{transform:rotate(180deg)}
+
+.claim-detail{padding:0 20px 20px 66px;border-top:1px solid #1e1e2e;display:none}
+.claim-detail.open{display:block}
+.claim-detail-inner{padding-top:16px}
+.detail-section{margin-bottom:14px}
+.detail-label{color:#71717a;font-size:10px;letter-spacing:1.5px;margin-bottom:6px}
+.detail-text{color:#d4d4d8;font-size:13px;line-height:1.6}
+.caveat{color:#fbbf24;font-size:12px;padding:6px 10px;background:#1c1917;border-radius:4px;border-left:2px solid #f59e0b;margin-bottom:4px;line-height:1.5;word-break:break-all}
+.recommendation{color:#60a5fa;font-size:12px;padding:6px 10px;background:#0c1629;border-radius:4px;border-left:2px solid #3b82f6;margin-bottom:4px;line-height:1.5}
+.detail-meta{display:flex;gap:20px;flex-wrap:wrap}
+.meta-item-label{color:#71717a;font-size:10px;letter-spacing:1.5px;margin-bottom:4px}
+.meta-item-value{color:#a1a1aa;font-size:13px}
+.meta-sig{color:#6366f1;font-size:11px}
+
+.footer{margin-top:40px;padding-top:20px;border-top:1px solid #1e1e2e;text-align:center}
+.footer-text{color:#27272a;font-size:11px}
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+<script>
+const DEMO_ENVELOPES=[{"envelope_id":"te-70314449e994","schema_version":"1.0","generated_at":"2026-02-15T23:57:00.171588+00:00","valid_until":"2026-02-16T00:57:00.171588+00:00","ttl_seconds":3600,"subject":{"organization":"killswitch-advisory","otvp_id":"otvp:org:killswitch-advisory","environment":"production"},"relying_party":null,"query_ref":null,"disclosure_level":"claims_only","claims":[{"claim_id":"cl-65ff2eda6c26","domain":"data_protection.encryption.key_management","assertion":"All customer-managed KMS keys have automatic rotation enabled","result":"SATISFIED","confidence":1.0,"evidence_refs":["ev-71bd7b1f0422","ev-b73296f9d2d1"],"evidence_count":2,"opinion":{"assessment":"No customer-managed keys found. 2 AWS-managed key(s) in use (auto-rotating).","context":null,"caveats":[],"recommendations":["Consider using customer-managed CMKs for sensitive workloads to enable granular access control and custom rotation schedules."]},"scope":{"environment":"test","services":["KMS"],"regions":["us-east-2"],"accounts":[],"exclusions":[]},"valid_from":"2026-02-15T23:57:00.171401+00:00","ttl_seconds":3600,"agent_id":"aws-kms-agent-v1","agent_version":"1.0.0","agent_certification":null,"signature":"ltheEqwyF3WwLrkSN1fu3KZIPgiHuTAGYTcaL30Q4iUhGeybO0uUwbkef0+wQN0dBTeXkX3UkCKpLmNjS21BAg=="}],"evidence_summary":{"total_items":2,"merkle_root":"03129916cdc15af49b2da706d80147da49744bbbad60bccf5166698e483b3925","collection_window_start":"2026-02-15T23:57:00.095332+00:00","collection_window_end":"2026-02-15T23:57:00.166229+00:00","domains_covered":["data_protection.encryption.key_management"]},"composite_level":"VERIFIED","domain_scores":{"data_protection.encryption":{"level":"VERIFIED","confidence":1.0,"claims_satisfied":1,"claims_total":1}},"signer_id":"aws-kms-agent-v1","signature":"lqN6vUbFFEgcfdA/b5eqOEVSoydD2mFXZ7CcXkUcFJBJG7fxiZlrWWquVNHqUWBzNGhAlMaimlbRXcJAs5D6Dg=="},{"envelope_id":"te-a54103505d9a","schema_version":"1.0","generated_at":"2026-02-15T23:57:01.066893+00:00","valid_until":"2026-02-16T00:57:01.066893+00:00","ttl_seconds":3600,"subject":{"organization":"killswitch-advisory","otvp_id":"otvp:org:killswitch-advisory","environment":"production"},"relying_party":null,"query_ref":null,"disclosure_level":"claims_only","claims":[{"claim_id":"cl-cc5f4d76eb3d","domain":"network_security.segmentation","assertion":"No high-risk ports are exposed to the public internet via security groups","result":"SATISFIED","confidence":1.0,"evidence_refs":["ev-3dcf97361b25"],"evidence_count":1,"opinion":{"assessment":"All 1 security group(s) properly segmented. No high-risk ports exposed to internet.","context":null,"caveats":[],"recommendations":[]},"scope":{"environment":"test","services":["VPC","SecurityGroups"],"regions":["us-east-2"],"accounts":[],"exclusions":[]},"valid_from":"2026-02-15T23:57:01.064519+00:00","ttl_seconds":3600,"agent_id":"aws-network-agent-v1","agent_version":"1.0.0","agent_certification":null,"signature":"6VPv61AiKGspaS6jVqdwPq8uFFwRGVB4b7C9IjiueZMwBCMkTw5xQYIqBg6RQkltMkKlkw0T6CBSmTMoySThDg=="}],"evidence_summary":{"total_items":1,"merkle_root":"b340027d6f293c59297f2a7a34d70ca34e889bacfc843745f9f86c1436d5321f","collection_window_start":"2026-02-15T23:57:01.061194+00:00","collection_window_end":"2026-02-15T23:57:01.061194+00:00","domains_covered":["network_security.segmentation"]},"composite_level":"VERIFIED","domain_scores":{"network_security.segmentation":{"level":"VERIFIED","confidence":1.0,"claims_satisfied":1,"claims_total":1}},"signer_id":"aws-network-agent-v1","signature":"sGWIoznXrF439zHQStsVa5cBNMQaHMNKmNWsPUUvIvXtzy37H72aUZkVDUprMxxETqzqh5ibuHnK+r1EKZ71BA=="},{"envelope_id":"te-43ea67289dfa","schema_version":"1.0","generated_at":"2026-02-15T23:57:05.249982+00:00","valid_until":"2026-02-16T00:57:05.249982+00:00","ttl_seconds":3600,"subject":{"organization":"killswitch-advisory","otvp_id":"otvp:org:killswitch-advisory","environment":"production"},"relying_party":null,"query_ref":null,"disclosure_level":"claims_only","claims":[{"claim_id":"cl-a1f5d8b48268","domain":"network_security.ingress_controls","assertion":"All public-facing resources have controlled ingress with WAF protection on internet-facing load balancers","result":"SATISFIED","confidence":1.0,"evidence_refs":[],"evidence_count":0,"opinion":{"assessment":"No public-facing security groups or internet-facing load balancers found. Attack surface is minimal. 100% of resources verified.","context":null,"caveats":[],"recommendations":[]},"scope":{"environment":"test","services":["VPC","ALB","WAF"],"regions":["us-east-2"],"accounts":[],"exclusions":[]},"valid_from":"2026-02-15T23:57:05.247065+00:00","ttl_seconds":3600,"agent_id":"aws-ingress-agent-v1","agent_version":"1.0.0","agent_certification":null,"signature":"vhfQMn9VxQDRCdAR8VXNho/Lx+Nes8ZzoxNXBlawAaa4r/nYYD5dKLkJiNNPN2Fv7RAMvAcVBcf0Q4MsmtEUAg=="}],"evidence_summary":{"total_items":0,"merkle_root":null,"collection_window_start":null,"collection_window_end":null,"domains_covered":[]},"composite_level":"VERIFIED","domain_scores":{"network_security.ingress_controls":{"level":"VERIFIED","confidence":1.0,"claims_satisfied":1,"claims_total":1}},"signer_id":"aws-ingress-agent-v1","signature":"Q4bB5w11EKmGYN3D8/MqAouCuYH9F8VlE4WmrVQ+cXGzSm55U6HcyvtQumXpHejZl9zhH0aIHyeXWA333jg9BA=="},{"envelope_id":"te-75afdc77426b","schema_version":"1.0","generated_at":"2026-02-15T23:57:06.832372+00:00","valid_until":"2026-02-16T00:57:06.832372+00:00","ttl_seconds":3600,"subject":{"organization":"killswitch-advisory","otvp_id":"otvp:org:killswitch-advisory","environment":"production"},"relying_party":null,"query_ref":null,"disclosure_level":"claims_only","claims":[{"claim_id":"cl-491df2b29dad","domain":"identity_and_access.authorization.least_privilege","assertion":"No IAM users or roles have overprivileged admin access attached directly","result":"SATISFIED","confidence":1.0,"evidence_refs":["ev-71ed4d99e3c0","ev-743922888e59","ev-a28634cb4b34","ev-7d494bd09a7c"],"evidence_count":4,"opinion":{"assessment":"All 4 IAM principal(s) follow least privilege. No admin policies directly attached.","context":null,"caveats":[],"recommendations":[]},"scope":{"environment":"test","services":["IAM"],"regions":["global"],"accounts":[],"exclusions":[]},"valid_from":"2026-02-15T23:57:06.831921+00:00","ttl_seconds":3600,"agent_id":"aws-privilege-agent-v1","agent_version":"1.0.0","agent_certification":null,"signature":"GOONDaUO13h51Paz4HuaoKMEFqPzeu1+PALUl+nUXyU+AN1VjqxIEEP1MabGSvel4JBxt0yt7b4scnUcvQhoBQ=="}],"evidence_summary":{"total_items":4,"merkle_root":"9ce3473106cb0c87b0ba3317ea584493610349ea6c09bc9465e30d2bbd20d666","collection_window_start":"2026-02-15T23:57:06.109415+00:00","collection_window_end":"2026-02-15T23:57:06.828137+00:00","domains_covered":["identity_and_access.authorization.least_privilege"]},"composite_level":"VERIFIED","domain_scores":{"identity_and_access.authorization":{"level":"VERIFIED","confidence":1.0,"claims_satisfied":1,"claims_total":1}},"signer_id":"aws-privilege-agent-v1","signature":"ISOGXpK9XhLwyLJb6IbQ3R8llqkSjP2eLN4hxkZZHyP429DmkNsc9RSMXh5xuGng/4fIvQFhzGpNfrt9E5JGDA=="},{"envelope_id":"te-444c049656dd","schema_version":"1.0","generated_at":"2026-02-15T23:56:57.997074+00:00","valid_until":"2026-02-16T00:56:57.997074+00:00","ttl_seconds":3600,"subject":{"organization":"killswitch-advisory","otvp_id":"otvp:org:killswitch-advisory","environment":"production"},"relying_party":null,"query_ref":null,"disclosure_level":"claims_only","claims":[{"claim_id":"cl-921898e60efb","domain":"data_protection.encryption.at_rest","assertion":"All production storage resources are encrypted at rest","result":"PARTIAL","confidence":0.5,"evidence_refs":["ev-80480fb12958","ev-9b5df2bc7a80","ev-dc70a15755e6","ev-693c437fbf72","ev-103c30af4710","ev-965b353752f6"],"evidence_count":6,"opinion":{"assessment":"3/6 resources satisfy encryption_enabled. 3 non-compliant.","context":null,"caveats":["3 resource(s) non-compliant: arn:aws:rds:us-east-2:294137048789:db:otvp-prod-analytics, arn:aws:s3:::otvp-prod-logs, arn:aws:ec2:us-east-2:294137048789:volume/vol-022d3b7b946de5cde"],"recommendations":[]},"scope":{"environment":"test","services":["RDS","S3","EBS"],"regions":["us-east-2"],"accounts":[],"exclusions":[]},"valid_from":"2026-02-15T23:56:57.996925+00:00","ttl_seconds":3600,"agent_id":"aws-encryption-agent-v1","agent_version":"1.0.0","agent_certification":null,"signature":"7xcHGTmZ6wr1AKAfvc16S8vHEi6Api0ZOICWKwileG797J5WCRI3F+FhQ94LngUsuXz7snznkPZlHKfayP9RAA=="}],"evidence_summary":{"total_items":6,"merkle_root":"ccecedcf803e2a58be0442021e296b5fff65470f4e6d4af208d1c276e1df9105","collection_window_start":"2026-02-15T23:56:55.936726+00:00","collection_window_end":"2026-02-15T23:56:57.991599+00:00","domains_covered":["data_protection.encryption.at_rest"]},"composite_level":"CRITICAL","domain_scores":{"data_protection.encryption":{"level":"CRITICAL","confidence":0.5,"claims_satisfied":0,"claims_total":1}},"signer_id":"aws-encryption-agent-v1","signature":"j50/7Tm7Lh/wlxVDby6d9YdL7wpzhYzbZcloMgSk/BIkV/V4cSLeBG1h9Hg3S6vhuz/SIu8akDiLX2ccugkfAw=="},{"envelope_id":"te-7180972bc815","schema_version":"1.0","generated_at":"2026-02-15T23:56:59.377719+00:00","valid_until":"2026-02-16T00:56:59.377719+00:00","ttl_seconds":3600,"subject":{"organization":"killswitch-advisory","otvp_id":"otvp:org:killswitch-advisory","environment":"production"},"relying_party":null,"query_ref":null,"disclosure_level":"claims_only","claims":[{"claim_id":"cl-e714f8063c27","domain":"identity_and_access.authentication.mfa_enforcement","assertion":"All IAM users with console access have MFA enabled","result":"PARTIAL","confidence":0.5,"evidence_refs":["ev-cb2ce71c1ec7","ev-57b05dc7d04c","ev-4447e816a00b"],"evidence_count":3,"opinion":{"assessment":"1/2 console user(s) have MFA enabled.","context":null,"caveats":["Console users WITHOUT MFA: otvp-dev-bob","1 programmatic-only user(s) excluded from console MFA scope"],"recommendations":["Enable MFA for: otvp-dev-bob","Consider enforcing MFA via IAM policy (aws:MultiFactorAuthPresent condition key)"]},"scope":{"environment":"test","services":["IAM"],"regions":["global"],"accounts":[],"exclusions":[]},"valid_from":"2026-02-15T23:56:59.377264+00:00","ttl_seconds":3600,"agent_id":"aws-mfa-agent-v1","agent_version":"1.0.0","agent_certification":null,"signature":"+Kw1y27CZt7W4vmKS5FCJUKGXWVS1kZPtHiqUtJ0eXF2rIn0+T1P2AUVtbMGK5YAFjVr972upXEmRlok4Dd+Bg=="}],"evidence_summary":{"total_items":3,"merkle_root":"6354da2291494b5935baf257dfd664633bee2d3e2c82555461e00e5dc4fc109c","collection_window_start":"2026-02-15T23:56:58.917349+00:00","collection_window_end":"2026-02-15T23:56:59.373662+00:00","domains_covered":["identity_and_access.authentication.mfa_enforcement"]},"composite_level":"CRITICAL","domain_scores":{"identity_and_access.authentication":{"level":"CRITICAL","confidence":0.5,"claims_satisfied":0,"claims_total":1}},"signer_id":"aws-mfa-agent-v1","signature":"Fs6W9uhSEqtBcMfKynJQTgHLJLRMUeyZOwABQcgW5YbmvyyK1aM45cpkXq0Bdd2GvNrcHdOI/taq1lmR4wjKBA=="},{"envelope_id":"te-02d6371a5f01","schema_version":"1.0","generated_at":"2026-02-15T23:57:02.144389+00:00","valid_until":"2026-02-16T00:57:02.144389+00:00","ttl_seconds":3600,"subject":{"organization":"killswitch-advisory","otvp_id":"otvp:org:killswitch-advisory","environment":"production"},"relying_party":null,"query_ref":null,"disclosure_level":"claims_only","claims":[{"claim_id":"cl-4cde4729b8dc","domain":"detection_and_response.logging.completeness","assertion":"Audit logging is enabled with multi-region CloudTrail and VPC flow logs on all VPCs","result":"NOT_SATISFIED","confidence":1.0,"evidence_refs":["ev-99d639bcd3d9","ev-d166379dd175"],"evidence_count":2,"opinion":{"assessment":"Only 0/2 logging checks passed. Significant gaps in audit logging coverage.","context":null,"caveats":["No compliant CloudTrail configuration found","VPC 'unnamed' (vpc-0f4888f54d2296acb) has no flow logs enabled"],"recommendations":["Create a multi-region CloudTrail with log file validation enabled","Enable VPC flow logs on all VPCs \u2014 send to CloudWatch Logs or S3"]},"scope":{"environment":"test","services":["CloudTrail","VPC FlowLogs"],"regions":["us-east-2"],"accounts":[],"exclusions":[]},"valid_from":"2026-02-15T23:57:02.143977+00:00","ttl_seconds":3600,"agent_id":"aws-logging-agent-v1","agent_version":"1.0.0","agent_certification":null,"signature":"Q+VHNbS2I4I5yXWC0XWZQ9m6i2q/w5xhwEIamJT7xd5YTnv5DQmMl9v4zsNDFIAoCVYWpp4PwNhsL4wA9DW4BQ=="}],"evidence_summary":{"total_items":2,"merkle_root":"24acc6f796bef83a75098290fd480e31f63b1bf1c29f19a4c24e4e254a685a37","collection_window_start":"2026-02-15T23:57:01.644015+00:00","collection_window_end":"2026-02-15T23:57:02.140762+00:00","domains_covered":["detection_and_response.logging.completeness"]},"composite_level":"CRITICAL","domain_scores":{"detection_and_response.logging":{"level":"CRITICAL","confidence":1.0,"claims_satisfied":0,"claims_total":1}},"signer_id":"aws-logging-agent-v1","signature":"8Jt7ave1YGJx4KBs+yc5p02Pjr3o2PJvrPF9Pn5rIcauMT6Hf/AzjrIKjacQ5cRqvOkI/MYCXcRuavtKQ01vCQ=="},{"envelope_id":"te-f2328629d897","schema_version":"1.0","generated_at":"2026-02-15T23:57:03.396513+00:00","valid_until":"2026-02-16T00:57:03.396513+00:00","ttl_seconds":3600,"subject":{"organization":"killswitch-advisory","otvp_id":"otvp:org:killswitch-advisory","environment":"production"},"relying_party":null,"query_ref":null,"disclosure_level":"claims_only","claims":[{"claim_id":"cl-3b62e48adf57","domain":"identity_and_access.lifecycle.provisioning","assertion":"All IAM accounts are actively used with no stale credentials","result":"NOT_SATISFIED","confidence":1.0,"evidence_refs":["ev-1a33cb616da1","ev-87533b271555","ev-8069d5beaae5"],"evidence_count":3,"opinion":{"assessment":"Only 1/3 IAM accounts are healthy.","context":null,"caveats":["Stale console accounts (>90d): otvp-dev-alice (no login in 0d), otvp-dev-bob (no login in 0d)"],"recommendations":["Disable or remove console access for inactive users"]},"scope":{"environment":"test","services":["IAM"],"regions":["global"],"accounts":[],"exclusions":[]},"valid_from":"2026-02-15T23:57:03.396085+00:00","ttl_seconds":3600,"agent_id":"aws-lifecycle-agent-v1","agent_version":"1.0.0","agent_certification":null,"signature":"zMdyak3vP0Y1oWVdoLVVC3ImSihnEEeBK2nZOvY177D3/dJRakLuaVAAiFvrnFq60enL+sGHUKtfqRqrh5dRAQ=="}],"evidence_summary":{"total_items":3,"merkle_root":"6772eb4bc0609a1410344a7f235aeead5062c405745c8c2e81be238ff23f08f7","collection_window_start":"2026-02-15T23:57:02.995562+00:00","collection_window_end":"2026-02-15T23:57:03.392412+00:00","domains_covered":["identity_and_access.lifecycle.provisioning"]},"composite_level":"CRITICAL","domain_scores":{"identity_and_access.lifecycle":{"level":"CRITICAL","confidence":1.0,"claims_satisfied":0,"claims_total":1}},"signer_id":"aws-lifecycle-agent-v1","signature":"aB6yKUUHfuzvoVOW8Fcj+LQadOOVJl76ih18ft6GZFDOBFEbBO45WdqmKqlxQdyoXKH4nxdcIppWEE04z3MeCA=="},{"envelope_id":"te-4339f9bd30da","schema_version":"1.0","generated_at":"2026-02-15T23:57:04.300941+00:00","valid_until":"2026-02-16T00:57:04.300941+00:00","ttl_seconds":3600,"subject":{"organization":"killswitch-advisory","otvp_id":"otvp:org:killswitch-advisory","environment":"production"},"relying_party":null,"query_ref":null,"disclosure_level":"claims_only","claims":[{"claim_id":"cl-5d1b0df9f07e","domain":"data_protection.encryption.in_transit","assertion":"All load balancers enforce TLS 1.2+ and certificates are valid","result":"NOT_APPLICABLE","confidence":1.0,"evidence_refs":[],"evidence_count":0,"opinion":{"assessment":"No load balancers or certificates found. Transit encryption evaluation not applicable.","context":null,"caveats":[],"recommendations":[]},"scope":{"environment":"test","services":["ALB","NLB","ACM"],"regions":["us-east-2"],"accounts":[],"exclusions":[]},"valid_from":"2026-02-15T23:57:04.297524+00:00","ttl_seconds":3600,"agent_id":"aws-transit-agent-v1","agent_version":"1.0.0","agent_certification":null,"signature":"vt2p1LXewE/ayDlQMXE1brp2s+C1Wp1yE0jtzRS/CfCJ9jBk1AxFIDrpuvzTNSQOWHjyFEh1X5PIm2jYexFqBQ=="}],"evidence_summary":{"total_items":0,"merkle_root":null,"collection_window_start":null,"collection_window_end":null,"domains_covered":[]},"composite_level":"CRITICAL","domain_scores":{"data_protection.encryption":{"level":"CRITICAL","confidence":1.0,"claims_satisfied":0,"claims_total":1}},"signer_id":"aws-transit-agent-v1","signature":"Xj5yT6cwB8yd+63UuamhawscnPvziFWWhl4a8K2AK5cpXIlNc9JpPXXLuS5n7c7tOsDRetoid5zziWEJoNSlCQ=="},{"envelope_id":"te-73e8e85175ee","schema_version":"1.0","generated_at":"2026-02-15T23:57:07.756600+00:00","valid_until":"2026-02-16T00:57:07.756600+00:00","ttl_seconds":3600,"subject":{"organization":"killswitch-advisory","otvp_id":"otvp:org:killswitch-advisory","environment":"production"},"relying_party":null,"query_ref":null,"disclosure_level":"claims_only","claims":[{"claim_id":"cl-ac3bdc2bfc74","domain":"infrastructure.compute.vulnerability_management","assertion":"Vulnerability management is active with no unpatched critical findings","result":"NOT_SATISFIED","confidence":1.0,"evidence_refs":["ev-5ff0c3961837"],"evidence_count":1,"opinion":{"assessment":"No vulnerability management infrastructure detected.","context":null,"caveats":["No vulnerability management tools detected"],"recommendations":["Enable SSM Agent on EC2 instances for patch management","Activate Amazon Inspector for vulnerability scanning"]},"scope":{"environment":"test","services":["SSM","Inspector"],"regions":["us-east-2"],"accounts":[],"exclusions":[]},"valid_from":"2026-02-15T23:57:07.756347+00:00","ttl_seconds":3600,"agent_id":"aws-vuln-agent-v1","agent_version":"1.0.0","agent_certification":null,"signature":"kRRBRhkT1+zs39/VY7/ZwlHekhfuWgsxUekQ/H+3odWFbKdJnb4rNjLnk5FJYxUDfN7LY7LE6Kf+PK6MVqHGDQ=="}],"evidence_summary":{"total_items":1,"merkle_root":"0aba143e72347901af44cc25e7047992a77c048a9e5d5fd4d17cfb4bdef0ea06","collection_window_start":"2026-02-15T23:57:07.751432+00:00","collection_window_end":"2026-02-15T23:57:07.751432+00:00","domains_covered":["infrastructure.compute.vulnerability_management"]},"composite_level":"CRITICAL","domain_scores":{"infrastructure.compute":{"level":"CRITICAL","confidence":1.0,"claims_satisfied":0,"claims_total":1}},"signer_id":"aws-vuln-agent-v1","signature":"hZ3Utlum8+KRmPhXCmBObA418CNT0W3H75IdnqJVkW/GOPQeyVSndh6fVXXPqljsLWJclwoHyQXWDpYIxVFzBw=="},{"envelope_id":"te-d3ab67dea343","schema_version":"1.0","generated_at":"2026-02-15T23:57:09.704168+00:00","valid_until":"2026-02-16T00:57:09.704168+00:00","ttl_seconds":3600,"subject":{"organization":"killswitch-advisory","otvp_id":"otvp:org:killswitch-advisory","environment":"production"},"relying_party":null,"query_ref":null,"disclosure_level":"claims_only","claims":[{"claim_id":"cl-a5b5d36c87cf","domain":"operational_resilience.backup.coverage","assertion":"All critical data stores have backup protection configured","result":"NOT_SATISFIED","confidence":1.0,"evidence_refs":["ev-0579c1952c4f","ev-b094111112ff","ev-bbb7ba607e61"],"evidence_count":3,"opinion":{"assessment":"Only 0/2 data stores have backup coverage.","context":null,"caveats":["No AWS Backup plans configured","EBS vol-022d3b7b946de5cde: no backup configured","EBS vol-0f3fa7c211a79121e: no backup configured"],"recommendations":["Create an AWS Backup plan covering all critical resources","Add backup coverage for: EBS:vol-022d3b7b946de5cde, EBS:vol-0f3fa7c211a79121e"]},"scope":{"environment":"test","services":["AWS Backup","RDS","EBS"],"regions":["us-east-2"],"accounts":[],"exclusions":[]},"valid_from":"2026-02-15T23:57:09.703992+00:00","ttl_seconds":3600,"agent_id":"aws-backup-agent-v1","agent_version":"1.0.0","agent_certification":null,"signature":"XhdvVYNGmFfWYIgoDt0T7DKxg3mwyzhb8Ut/pCc4q6z8CMsiQWwFzNA9x72U3HKhIylAGKLh5xnQIS650Zc6Cg=="}],"evidence_summary":{"total_items":3,"merkle_root":"0565b1f26700288e96e7f0d83496ef054a61aa1c08d6e9f01fc79386d90c6ec4","collection_window_start":"2026-02-15T23:57:08.337675+00:00","collection_window_end":"2026-02-15T23:57:09.692091+00:00","domains_covered":["operational_resilience.backup.coverage"]},"composite_level":"CRITICAL","domain_scores":{"operational_resilience.backup":{"level":"CRITICAL","confidence":1.0,"claims_satisfied":0,"claims_total":1}},"signer_id":"aws-backup-agent-v1","signature":"qpBP3elxJpca7/YOvCPs+bFF/s1lxQGuoDPvPuf3v1qPnR0ZK8cOxr9Pqa+8eExE8tOKW/00rmZj2vtvW1TLDg=="}];
+
+const TRUST_COLORS={VERIFIED:{bg:"#0a2e1a",border:"#10b981",text:"#34d399"},HIGH:{bg:"#0a2418",border:"#22c55e",text:"#4ade80"},MEDIUM:{bg:"#1a1a08",border:"#eab308",text:"#facc15"},LOW:{bg:"#1a1208",border:"#f97316",text:"#fb923c"},CRITICAL:{bg:"#1a0a0a",border:"#ef4444",text:"#f87171"}};
+const RESULT_INFO={SATISFIED:{bg:"#052e16",text:"#4ade80",icon:"\u2713"},PARTIAL:{bg:"#1c1917",text:"#fbbf24",icon:"\u25d0"},NOT_SATISFIED:{bg:"#1c0a0a",text:"#f87171",icon:"\u2717"},INDETERMINATE:{bg:"#18181b",text:"#a1a1aa",icon:"?"},NOT_APPLICABLE:{bg:"#18181b",text:"#71717a",icon:"\u2014"}};
+const SOC2_MAP={"data_protection.encryption.at_rest":["CC6.1","CC6.7"],"data_protection.encryption.key_management":["CC6.1","CC6.7"],"data_protection.encryption.in_transit":["CC6.1","CC6.7"],"identity_and_access.authentication.mfa_enforcement":["CC6.1"],"identity_and_access.lifecycle.provisioning":["CC6.2","CC6.5"],"identity_and_access.authorization.least_privilege":["CC6.3"],"network_security.segmentation":["CC6.1","CC6.6"],"network_security.ingress_controls":["CC6.6"],"detection_and_response.logging.completeness":["CC7.1","CC7.2"],"infrastructure.compute.vulnerability_management":["CC7.1"],"operational_resilience.backup.coverage":["CC7.5","CC9.1"]};
+const DOMAIN_LABELS={"data_protection.encryption.at_rest":"Encryption at Rest","data_protection.encryption.key_management":"KMS Key Management","data_protection.encryption.in_transit":"Encryption in Transit","identity_and_access.authentication.mfa_enforcement":"IAM MFA Enforcement","identity_and_access.lifecycle.provisioning":"Account Lifecycle","identity_and_access.authorization.least_privilege":"Least Privilege","network_security.segmentation":"Network Segmentation","network_security.ingress_controls":"Ingress Controls","detection_and_response.logging.completeness":"Audit Logging","detection_and_response.monitoring.alerting_coverage":"Monitoring & Alerting","infrastructure.compute.vulnerability_management":"Vulnerability Management","operational_resilience.backup.coverage":"Backup & Recovery"};
+const DOMAIN_DESC={"data_protection.encryption.at_rest":"Verifies that all storage resources (RDS databases, S3 buckets, EBS volumes) are encrypted at rest using AWS KMS or AES-256. Unencrypted data stores are a critical finding in any SOC 2 audit — an attacker with disk access can read data in plaintext.","data_protection.encryption.key_management":"Audits KMS key configuration: are customer-managed keys (CMKs) using automatic rotation? Are AWS-managed keys properly scoped? Key management controls how encryption keys are created, rotated, and retired — weak key management undermines encryption even when it's enabled.","data_protection.encryption.in_transit":"Checks that load balancers enforce TLS 1.2 or higher and that SSL/TLS certificates are valid and not expiring. Data moving between services or to end users must be encrypted to prevent interception.","identity_and_access.authentication.mfa_enforcement":"Scans all IAM users with AWS console access and verifies multi-factor authentication is enabled. Programmatic-only users (API keys, no console) are noted but excluded from the MFA requirement. A single console user without MFA is a finding every auditor flags.","identity_and_access.lifecycle.provisioning":"Identifies stale IAM accounts (no login in 90+ days) and unused access keys (inactive 90+ days). Orphaned credentials are one of the most common initial access vectors — accounts that should have been deprovisioned but weren't.","identity_and_access.authorization.least_privilege":"Analyzes IAM users and roles for overprivileged access. Flags AdministratorAccess, IAMFullAccess, or PowerUserAccess attached directly. Also identifies inline policies on users, which bypass centralized policy management and reduce visibility.","network_security.segmentation":"Evaluates security group rules for proper network isolation. Flags high-risk ports (SSH, RDP, database ports) exposed to 0.0.0.0/0. Web ports (80, 443) open to the internet are acceptable for public-facing services; everything else should be restricted to specific CIDR ranges.","network_security.ingress_controls":"Assesses the overall public attack surface: which security groups allow inbound internet traffic on non-web ports, and whether internet-facing load balancers have WAF (Web Application Firewall) protection. Minimal public exposure reduces the blast radius of any perimeter breach.","detection_and_response.logging.completeness":"Verifies that CloudTrail is configured for multi-region logging with log file validation enabled, and that all VPCs have flow logs active. Without comprehensive audit logging, you cannot detect, investigate, or respond to security incidents — it's the foundation of CC7.","infrastructure.compute.vulnerability_management":"Checks whether vulnerability management infrastructure is active: SSM Agent on EC2 instances for patch compliance, and Amazon Inspector for continuous vulnerability scanning. Without these, you have no visibility into unpatched CVEs or misconfigured systems.","operational_resilience.backup.coverage":"Verifies that AWS Backup plans exist and that critical data stores (RDS, EBS) have backup protection configured with recent snapshots. Without tested backups, a ransomware event or accidental deletion becomes a business-ending event instead of a recoverable incident."};
+const SOC2_NAMES={"CC6.1":"Logical Access Security — restricts access through authentication, encryption, and segmentation","CC6.2":"User Account Lifecycle — secure creation, management, and deletion of accounts","CC6.3":"Authorization & Least Privilege — access based on roles and responsibilities","CC6.5":"Asset Decommissioning — timely removal of access when no longer needed","CC6.6":"External Threat Detection — physical and logical controls against external threats","CC6.7":"Data Movement Security — protects transmission and movement of data","CC7.1":"Vulnerability Detection — monitoring for changes that introduce vulnerabilities","CC7.2":"Anomaly Detection — monitoring for anomalies indicating security events","CC7.5":"Incident Recovery — measures to recover from security incidents","CC8.1":"Change Authorization — changes are authorized, tested, and documented","CC9.1":"Business Continuity — risk mitigation for business disruptions","CC9.2":"Vendor Risk — risk mitigation for third-party threats"};
+
+let envelopes=[...DEMO_ENVELOPES];
+let expandedClaims={};
+
+function formatDomain(d){return d.split(".").map(p=>p.replace(/_/g," ")).map(p=>p.charAt(0).toUpperCase()+p.slice(1)).join(" \u2192 ")}
+function getTitle(env){return(env.claims||[]).map(c=>DOMAIN_LABELS[c.domain]||formatDomain(c.domain)).join(", ")||"Unknown"}
+function getDesc(env){const domains=(env.claims||[]).map(c=>c.domain);return domains.map(d=>DOMAIN_DESC[d]||'').filter(Boolean).join(' ')||''}
+function getSoc2(env){return[...new Set((env.claims||[]).flatMap(c=>SOC2_MAP[c.domain]||[]))].sort()}
+
+function gaugeHTML(level,confidence){
+  const c=TRUST_COLORS[level]||TRUST_COLORS.CRITICAL;
+  const pct=Math.round(confidence*100);
+  const r=54,circ=2*Math.PI*r,offset=circ-(confidence*circ);
+  return`<div class="gauge">
+    <svg width="130" height="130" viewBox="0 0 130 130">
+      <circle cx="65" cy="65" r="${r}" fill="none" stroke="#1e1e2e" stroke-width="8"/>
+      <circle cx="65" cy="65" r="${r}" fill="none" stroke="${c.border}" stroke-width="8" stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round" transform="rotate(-90 65 65)" style="transition:stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)"/>
+      <text x="65" y="58" text-anchor="middle" fill="${c.text}" class="mono" style="font-size:28px;font-weight:700">${pct}%</text>
+      <text x="65" y="80" text-anchor="middle" fill="#71717a" class="mono" style="font-size:11px;letter-spacing:1.5px">CONFIDENCE</text>
+    </svg>
+    <div class="gauge-label mono" style="background:${c.bg};border:1px solid ${c.border};color:${c.text}">${level}</div>
+  </div>`;
+}
+
+function claimHTML(claim,envIdx,claimIdx){
+  const rc=RESULT_INFO[claim.result]||RESULT_INFO.INDETERMINATE;
+  const soc2=SOC2_MAP[claim.domain]||[];
+  const op=claim.opinion||{};
+  const id=`claim-${envIdx}-${claimIdx}`;
+  const isOpen=expandedClaims[id];
+
+  let detail='';
+  if(op.assessment)detail+=`<div class="detail-section"><div class="detail-label mono">ASSESSMENT</div><div class="detail-text">${op.assessment}</div></div>`;
+  if(op.caveats&&op.caveats.length)detail+=`<div class="detail-section"><div class="detail-label mono">CAVEATS</div>${op.caveats.map(c=>`<div class="caveat mono">\u26a0 ${esc(c)}</div>`).join('')}</div>`;
+  if(op.recommendations&&op.recommendations.length)detail+=`<div class="detail-section"><div class="detail-label mono">RECOMMENDATIONS</div>${op.recommendations.map(r=>`<div class="recommendation mono">\u2192 ${esc(r)}</div>`).join('')}</div>`;
+  detail+=`<div class="detail-meta">
+    <div><div class="meta-item-label mono">EVIDENCE</div><div class="meta-item-value mono">${claim.evidence_count} items</div></div>
+    <div><div class="meta-item-label mono">AGENT</div><div class="meta-item-value mono">${claim.agent_id} v${claim.agent_version}</div></div>
+    <div><div class="meta-item-label mono">SIGNATURE</div><div class="meta-sig mono">${(claim.signature||'').slice(0,24)}...</div></div>
+  </div>`;
+
+  return`<div class="claim">
+    <div class="claim-header" onclick="toggleClaim('${id}')">
+      <div class="claim-icon" style="background:${rc.bg};border:1px solid ${rc.text}33;color:${rc.text}">${rc.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="claim-badges">
+          <span class="result-badge mono" style="background:${rc.bg};color:${rc.text}">${claim.result}</span>
+          <span class="claim-conf mono">${Math.round(claim.confidence*100)}%</span>
+          ${soc2.map(s=>`<span class="claim-soc2 mono">${s}</span>`).join('')}
+        </div>
+        <div class="claim-assertion">${esc(claim.assertion)}</div>
+        <div class="claim-domain mono">${formatDomain(claim.domain)}</div>
+      </div>
+      <div class="claim-arrow ${isOpen?'open':''}">▾</div>
+    </div>
+    <div class="claim-detail ${isOpen?'open':''}"><div class="claim-detail-inner">${detail}</div></div>
+  </div>`;
+}
+
+function envelopeHTML(env,idx){
+  const c=TRUST_COLORS[env.composite_level]||TRUST_COLORS.CRITICAL;
+  const es=env.evidence_summary||{};
+  const claims=env.claims||[];
+  const sat=claims.filter(x=>x.result==="SATISFIED").length;
+  const par=claims.filter(x=>x.result==="PARTIAL").length;
+  const fail=claims.filter(x=>x.result==="NOT_SATISFIED").length;
+  const avg=claims.length?claims.reduce((s,x)=>s+x.confidence,0)/claims.length:0;
+  const soc2=getSoc2(env);
+
+  return`<div class="envelope" style="border:1px solid ${c.border}22;box-shadow:0 0 20px ${c.border}10">
+    <div class="envelope-header" style="background:linear-gradient(135deg,${c.bg},#0a0a0f)">
+      <div>
+        <div class="envelope-badges">
+          <span class="envelope-label mono">TRUST ENVELOPE</span>
+          ${soc2.map(s=>`<span class="soc2-badge mono">${s}</span>`).join('')}
+        </div>
+        <div class="envelope-title">${getTitle(env)}</div>
+        <div class="envelope-meta mono">${env.subject?.organization} · ${env.envelope_id} · ${new Date(env.generated_at).toLocaleString()}</div>
+      </div>
+      ${gaugeHTML(env.composite_level,avg)}
+    </div>
+    <div style="padding:16px 28px;border-bottom:1px solid #1e1e2e;background:#08080d">
+      <div style="color:#d4d4d8;font-size:13px;line-height:1.6;margin-bottom:${soc2.length?'12':'0'}px">${getDesc(env)}</div>
+      ${soc2.length?`<div style="display:flex;flex-direction:column;gap:4px">${soc2.map(s=>`<div style="display:flex;align-items:baseline;gap:8px"><span class="mono" style="color:#818cf8;font-size:11px;font-weight:600;min-width:48px">${s}</span><span style="color:#71717a;font-size:12px">${SOC2_NAMES[s]||''}</span></div>`).join('')}</div>`:''}
+    </div>
+    <div class="metrics">
+      ${[{l:"EVIDENCE",v:es.total_items||0},{l:"CLAIMS",v:claims.length},{l:"SATISFIED",v:sat,c:"#4ade80"},{l:"PARTIAL",v:par,c:"#fbbf24"},{l:"FAILED",v:fail,c:"#f87171"}].map(m=>`<div class="metric"><div class="metric-label mono">${m.l}</div><div class="metric-value mono" style="color:${m.c||'#e4e4e7'}">${m.v}</div></div>`).join('')}
+    </div>
+    ${getFindingsHTML(env,c)}
+    ${es.merkle_root?`<div class="merkle-bar"><span class="merkle-icon">\u26d3</span><span class="merkle-label mono">MERKLE ROOT</span><span class="merkle-hash mono">${es.merkle_root}</span></div>`:''}
+    <div class="claims-section">
+      <div class="claims-label mono">CLAIMS</div>
+      ${claims.map((cl,ci)=>claimHTML(cl,idx,ci)).join('')}
+    </div>
+  </div>`;
+}
+
+function getFindingsHTML(env,colors){
+  const claims=env.claims||[];
+  if(!claims.length)return'';
+  const cl=claims[0];
+  const op=cl.opinion||{};
+  const rc=RESULT_INFO[cl.result]||RESULT_INFO.INDETERMINATE;
+  const pct=Math.round(cl.confidence*100);
+  
+  // Build confidence explanation
+  let confExplain='';
+  if(cl.result==='SATISFIED'){
+    confExplain=`The agent scanned 100% of resources in scope and all passed. ${pct}% confidence means ${pct===100?'complete verification of the entire population — not a sample.':'the agent verified every resource it could access.'}`;
+  }else if(cl.result==='PARTIAL'){
+    confExplain=`${pct}% of scanned resources are compliant. This is a direct measurement, not an estimate — the agent verified every resource, and ${100-pct}% failed. The non-compliant resources are listed below by name.`;
+  }else if(cl.result==='NOT_SATISFIED'){
+    confExplain=`The agent has ${pct}% confidence that this control is failing. ${pct>=90?'This is a definitive finding based on complete evidence — not ambiguous.':'The evidence strongly indicates this control is not operating effectively.'}`;
+  }else if(cl.result==='NOT_APPLICABLE'){
+    confExplain=`This control does not apply to the current environment (e.g., no load balancers exist to check TLS on). The ${pct}% reflects confidence that the control genuinely doesn't apply, not that something was missed.`;
+  }else{
+    confExplain=`The agent could not collect sufficient evidence to evaluate this control. This typically means the required AWS services are not enabled or accessible.`;
+  }
+
+  let html=`<div style="padding:16px 28px;border-bottom:1px solid #1e1e2e">`;
+  html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="color:#71717a;font-size:10px;letter-spacing:2px" class="mono">FINDINGS</span></div>`;
+  
+  // Assessment with result icon
+  html+=`<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">`;
+  html+=`<div style="width:24px;height:24px;border-radius:4px;background:${rc.bg};border:1px solid ${rc.text}33;display:flex;align-items:center;justify-content:center;color:${rc.text};font-size:13px;flex-shrink:0;margin-top:1px">${rc.icon}</div>`;
+  html+=`<div style="color:#e4e4e7;font-size:13px;line-height:1.6">${esc(op.assessment||'No assessment available.')}</div>`;
+  html+=`</div>`;
+
+  // Confidence explanation
+  html+=`<div style="padding:8px 12px;background:#0d0d14;border:1px solid #1e1e2e;border-radius:6px;margin-bottom:12px">`;
+  html+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="color:${colors.text};font-size:18px;font-weight:700" class="mono">${pct}%</span><span style="color:#52525b;font-size:10px;letter-spacing:1px" class="mono">CONFIDENCE</span></div>`;
+  html+=`<div style="color:#a1a1aa;font-size:12px;line-height:1.5">${confExplain}</div>`;
+  html+=`</div>`;
+
+  // Caveats
+  if(op.caveats&&op.caveats.length){
+    op.caveats.forEach(cav=>{
+      html+=`<div style="color:#fbbf24;font-size:12px;padding:6px 10px;background:#1c1917;border-radius:4px;border-left:2px solid #f59e0b;margin-bottom:4px;line-height:1.5;word-break:break-all" class="mono">\u26a0 ${esc(cav)}</div>`;
+    });
+  }
+
+  // Recommendations
+  if(op.recommendations&&op.recommendations.length){
+    html+=`<div style="margin-top:8px">`;
+    op.recommendations.forEach(rec=>{
+      html+=`<div style="color:#60a5fa;font-size:12px;padding:6px 10px;background:#0c1629;border-radius:4px;border-left:2px solid #3b82f6;margin-bottom:4px;line-height:1.5" class="mono">\u2192 ${esc(rec)}</div>`;
+    });
+    html+=`</div>`;
+  }
+
+  html+=`</div>`;
+  return html;
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+function render(){
+  const totalEv=envelopes.reduce((s,e)=>s+(e.evidence_summary?.total_items||0),0);
+  const allClaims=envelopes.flatMap(e=>e.claims||[]);
+  const totalCl=allClaims.length;
+  const satCount=allClaims.filter(c=>c.result==="SATISFIED").length;
+  const critCount=envelopes.filter(e=>e.composite_level==="CRITICAL").length;
+  const allSoc2=[...new Set(allClaims.flatMap(c=>SOC2_MAP[c.domain]||[]))].sort();
+
+  document.getElementById('app').innerHTML=`
+    <div class="header">
+      <div class="header-row">
+        <div class="logo">\u25c8</div>
+        <div class="header-title">OTVP Trust Dashboard</div>
+      </div>
+      <div class="header-sub">Open Trust Verification Protocol — Real-time security posture from live infrastructure</div>
+    </div>
+    <div class="stats-grid">
+      ${[{l:"ENVELOPES",v:envelopes.length,c:"#818cf8"},{l:"TOTAL EVIDENCE",v:totalEv,c:"#818cf8"},{l:"CLAIMS EVALUATED",v:totalCl,c:"#818cf8"},{l:"SATISFIED",v:satCount,c:"#4ade80"},{l:"CRITICAL FINDINGS",v:critCount,c:critCount>0?"#f87171":"#4ade80"},{l:"SOC 2 CRITERIA",v:allSoc2.join(", ")||"\u2014",c:"#818cf8",sm:true}].map(s=>`<div class="stat-card"><div class="stat-label mono">${s.l}</div><div class="stat-value${s.sm?' small':''} mono" style="color:${s.c}">${s.v}</div></div>`).join('')}
+    </div>
+    <div style="background:#0a0a0f;border:1px solid #1e1e2e;border-radius:8px;padding:20px 24px;margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;cursor:pointer" onclick="document.getElementById('legend-body').style.display=document.getElementById('legend-body').style.display==='none'?'block':'none';this.querySelector('.arrow').textContent=document.getElementById('legend-body').style.display==='none'?'▸':'▾'">
+        <span style="color:#71717a;font-size:10px;letter-spacing:2px" class="mono">HOW TO READ THIS DASHBOARD</span>
+        <span class="arrow" style="color:#52525b;font-size:14px">▾</span>
+      </div>
+      <div id="legend-body">
+        <div style="color:#a1a1aa;font-size:13px;line-height:1.7;margin-bottom:16px">
+          Each card represents a <strong style="color:#e4e4e7">Trust Envelope</strong> — OTVP's replacement for a SOC 2 audit finding. Envelopes are generated by verification agents scanning live AWS infrastructure in real time and producing cryptographically signed evidence.
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:16px">
+          <div style="background:#111118;border:1px solid #27272a;border-radius:6px;padding:14px">
+            <div style="color:#71717a;font-size:10px;letter-spacing:1.5px;margin-bottom:8px" class="mono">CONFIDENCE %</div>
+            <div style="color:#d4d4d8;font-size:12px;line-height:1.6">The circular gauge shows <strong style="color:#e4e4e7">what percentage of the scanned population is compliant</strong>. Unlike traditional audits that sample a subset, OTVP agents scan every resource — so 100% means every resource was verified and passed. 50% means half passed and half failed. For failures, high confidence means the agent has definitive evidence of the gap.</div>
+          </div>
+          <div style="background:#111118;border:1px solid #27272a;border-radius:6px;padding:14px">
+            <div style="color:#71717a;font-size:10px;letter-spacing:1.5px;margin-bottom:8px" class="mono">TRUST LEVELS</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:#34d399;font-size:11px;width:70px" class="mono">VERIFIED</span><span style="color:#a1a1aa;font-size:12px">95%+ confidence — strong evidence across all resources</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:#4ade80;font-size:11px;width:70px" class="mono">HIGH</span><span style="color:#a1a1aa;font-size:12px">75-94% — good coverage with minor gaps</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:#facc15;font-size:11px;width:70px" class="mono">MEDIUM</span><span style="color:#a1a1aa;font-size:12px">55-74% — partial compliance, action needed</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:#fb923c;font-size:11px;width:70px" class="mono">LOW</span><span style="color:#a1a1aa;font-size:12px">30-54% — significant gaps identified</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:#f87171;font-size:11px;width:70px" class="mono">CRITICAL</span><span style="color:#a1a1aa;font-size:12px">&lt;30% — control failures or insufficient evidence</span></div>
+            </div>
+          </div>
+          <div style="background:#111118;border:1px solid #27272a;border-radius:6px;padding:14px">
+            <div style="color:#71717a;font-size:10px;letter-spacing:1.5px;margin-bottom:8px" class="mono">CLAIM RESULTS</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:#4ade80;font-size:14px;width:20px;text-align:center">\u2713</span><span style="color:#4ade80;font-size:11px;width:100px" class="mono">SATISFIED</span><span style="color:#a1a1aa;font-size:12px">Control is operating effectively</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:#fbbf24;font-size:14px;width:20px;text-align:center">\u25d0</span><span style="color:#fbbf24;font-size:11px;width:100px" class="mono">PARTIAL</span><span style="color:#a1a1aa;font-size:12px">Some resources compliant, others not</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:#f87171;font-size:14px;width:20px;text-align:center">\u2717</span><span style="color:#f87171;font-size:11px;width:100px" class="mono">NOT SATISFIED</span><span style="color:#a1a1aa;font-size:12px">Control is not operating</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:#71717a;font-size:14px;width:20px;text-align:center">\u2014</span><span style="color:#71717a;font-size:11px;width:100px" class="mono">N/A</span><span style="color:#a1a1aa;font-size:12px">Not applicable to this environment</span></div>
+            </div>
+          </div>
+          <div style="background:#111118;border:1px solid #27272a;border-radius:6px;padding:14px">
+            <div style="color:#71717a;font-size:10px;letter-spacing:1.5px;margin-bottom:8px" class="mono">SOC 2 CRITERIA BADGES</div>
+            <div style="color:#d4d4d8;font-size:12px;line-height:1.6;margin-bottom:8px">Purple badges like <span style="padding:2px 6px;border-radius:3px;background:#1e1b4b;color:#818cf8;font-size:10px" class="mono">CC6.1</span> show which SOC 2 Trust Services Criteria each agent maps to. These are the same criteria auditors evaluate in a traditional SOC 2 Type II — but verified continuously with cryptographic proof instead of periodic sampling.</div>
+          </div>
+          <div style="background:#111118;border:1px solid #27272a;border-radius:6px;padding:14px">
+            <div style="color:#71717a;font-size:10px;letter-spacing:1.5px;margin-bottom:8px" class="mono">CRYPTOGRAPHIC VERIFICATION</div>
+            <div style="color:#d4d4d8;font-size:12px;line-height:1.6">Every evidence item is signed with <strong style="color:#e4e4e7">Ed25519</strong> and chained into a <strong style="color:#e4e4e7">Merkle tree</strong>. The <span style="color:#6366f1" class="mono">\u26d3 MERKLE ROOT</span> is a tamper-proof fingerprint of all evidence — if any item is modified, the root changes and verification fails. Signatures on claims and envelopes provide end-to-end integrity from raw evidence to final assessment.</div>
+          </div>
+          <div style="background:#111118;border:1px solid #27272a;border-radius:6px;padding:14px">
+            <div style="color:#71717a;font-size:10px;letter-spacing:1.5px;margin-bottom:8px" class="mono">WHAT MAKES THIS DIFFERENT</div>
+            <div style="color:#d4d4d8;font-size:12px;line-height:1.6">Traditional SOC 2 reports are PDFs based on evidence that is 3-12 months stale. These Trust Envelopes were generated from <strong style="color:#e4e4e7">live AWS infrastructure</strong> in under 3 seconds each, with every finding backed by verifiable cryptographic proof. Click any claim to see the assessment, caveats, and recommendations.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="upload-zone" id="dropzone">
+      <span>Drop Trust Envelope JSON files here or click to upload</span>
+    </div>
+    ${envelopes.map((e,i)=>envelopeHTML(e,i)).join('')}
+    <div class="footer"><div class="footer-text mono">OTVP v1.0 · Killswitch Advisory · github.com/wharmer68/otvp</div></div>
+  `;
+
+  const dz=document.getElementById('dropzone');
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover')});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('dragover');handleFiles(e.dataTransfer.files)});
+  dz.addEventListener('click',()=>{const inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.multiple=true;inp.onchange=e=>handleFiles(e.target.files);inp.click()});
+}
+
+function toggleClaim(id){expandedClaims[id]=!expandedClaims[id];render()}
+
+function handleFiles(files){
+  Array.from(files).forEach(f=>{
+    if(!f.name.endsWith('.json'))return;
+    const r=new FileReader();
+    r.onload=e=>{
+      try{
+        const d=JSON.parse(e.target.result);
+        if(d.envelope_id&&!envelopes.find(x=>x.envelope_id===d.envelope_id)){
+          envelopes.unshift(d);render();
+        }
+      }catch(err){console.error('Invalid JSON',err)}
+    };
+    r.readAsText(f);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
