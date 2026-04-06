@@ -173,9 +173,19 @@ function showEnvelopes(): void {
 }
 
 async function showVendors(): Promise<void> {
-  const vendors = await getVendors();
+  let vendors: Vendor[];
+  try {
+    vendors = await getVendors();
+  } catch {
+    vendors = getLocalVendors();
+  }
   renderVendors(getViewContainer(), vendors, fetchEnvelopesForVendor, async () => {
-    const updated = await getVendors();
+    let updated: Vendor[];
+    try {
+      updated = await getVendors();
+    } catch {
+      updated = getLocalVendors();
+    }
     renderShell(updated);
     showVendors();
   });

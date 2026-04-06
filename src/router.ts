@@ -4,7 +4,7 @@ export interface Route {
   params?: Record<string, string>;
 }
 
-export type ViewRenderer = (params: Record<string, string>) => void;
+export type ViewRenderer = (params: Record<string, string>) => void | Promise<void>;
 
 const routes: Route[] = [];
 const renderers: Map<string, ViewRenderer> = new Map();
@@ -38,13 +38,17 @@ export function startRouter(): void {
         const params: Record<string, string> = {};
         const renderer = renderers.get(route.view);
         if (renderer) {
-          // Extract named params
-          const paramPattern = route.pattern.source;
-          const paramNames = [...paramPattern.matchAll(/\(\[/g)];
           match.slice(1).forEach((val, i) => {
             params[`p${i}`] = val;
           });
-          renderer(params);
+          try {
+            const result = renderer(params);
+            if (result instanceof Promise) {
+              result.catch(err => console.error(`Route error [${route.view}]:`, err));
+            }
+          } catch (err) {
+            console.error(`Route error [${route.view}]:`, err);
+          }
         }
         // Update nav highlights
         document.querySelectorAll('.nav-link').forEach(el => {
