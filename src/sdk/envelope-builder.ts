@@ -37,12 +37,37 @@ function simpleHash(input: string): string {
   return combined.toString(16).padStart(16, '0') + h2.toString(16).padStart(8, '0') + h1.toString(16).padStart(8, '0');
 }
 
-function computeCompositeLevel(confidence: number): CompositeLevel {
-  if (confidence >= 0.95) return 'VERIFIED';
-  if (confidence >= 0.75) return 'HIGH';
-  if (confidence >= 0.55) return 'MEDIUM';
-  if (confidence >= 0.30) return 'LOW';
-  return 'CRITICAL';
+function computeCompositeLevel(
+  confidence: number,
+  result: AgentResult['result'],
+): CompositeLevel {
+  // Composite level must reflect BOTH the claim result and the confidence.
+  // High confidence in a failure is a bad thing, not a good thing.
+  switch (result) {
+    case 'SATISFIED':
+      // Confidence reflects how thoroughly the agent verified compliance
+      if (confidence >= 0.95) return 'VERIFIED';
+      if (confidence >= 0.75) return 'HIGH';
+      if (confidence >= 0.55) return 'MEDIUM';
+      return 'LOW';
+    case 'PARTIAL':
+      // Some resources pass, some fail — confidence = compliance rate
+      if (confidence >= 0.75) return 'MEDIUM';
+      if (confidence >= 0.55) return 'LOW';
+      return 'CRITICAL';
+    case 'NOT_SATISFIED':
+      // Control is failing — higher confidence means more certain it's bad
+      return 'CRITICAL';
+    case 'NOT_APPLICABLE':
+      // Control doesn't apply — not a risk, but not verified either
+      if (confidence >= 0.95) return 'VERIFIED';
+      return 'HIGH';
+    case 'INDETERMINATE':
+      // Couldn't determine — treat as a gap
+      return 'LOW';
+    default:
+      return 'CRITICAL';
+  }
 }
 
 function computeMerkleRoot(evidenceItems: AgentResult['evidence_items']): string | null {
@@ -108,7 +133,7 @@ export class EnvelopeBuilder {
       domains_covered: [result.domain],
     };
 
-    const compositeLevel = computeCompositeLevel(result.confidence);
+    const compositeLevel = computeCompositeLevel(result.confidence, result.result);
 
     const domainScore: DomainScore = {
       level: compositeLevel,

@@ -73,7 +73,18 @@ export function envelopeCardHTML(env: TrustEnvelope, idx: number): string {
   const sat = claims.filter(x => x.result === 'SATISFIED').length;
   const par = claims.filter(x => x.result === 'PARTIAL').length;
   const fail = claims.filter(x => x.result === 'NOT_SATISFIED').length;
-  const avg = claims.length ? claims.reduce((s, x) => s + x.confidence, 0) / claims.length : 0;
+  // Compute effective compliance score (not raw confidence).
+  // For failures, high confidence is BAD — it means we're certain the control is broken.
+  const RESULT_MULTIPLIER: Record<string, number> = {
+    SATISFIED: 1.0,
+    PARTIAL: 0.5,
+    NOT_SATISFIED: 0.0,
+    INDETERMINATE: 0.25,
+    NOT_APPLICABLE: 1.0, // N/A is not a risk
+  };
+  const avg = claims.length
+    ? claims.reduce((s, x) => s + x.confidence * (RESULT_MULTIPLIER[x.result] ?? 0), 0) / claims.length
+    : 0;
   const soc2 = getSoc2(env);
 
   return `<div class="envelope" style="border:1px solid ${c.border}22;box-shadow:0 0 20px ${c.border}10">
