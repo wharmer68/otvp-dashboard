@@ -10,19 +10,16 @@ import type { Vendor } from './types/vendor';
 
 import { addRoute, startRouter, navigate } from './router';
 import { appShellHTML } from './components/app-shell';
-import { getLocalEnvelopes, setLocalEnvelopes, addLocalEnvelope } from './services/envelope-store';
-import { getVendors, getLocalVendors, createVendor } from './services/vendor-store';
+import { getLocalEnvelopes, setLocalEnvelopes } from './services/envelope-store';
+import { getVendors, getLocalVendors, createVendor, updateVendor } from './services/vendor-store';
 import { computeRiskAssessment } from './services/risk-engine';
 import { logAudit } from './services/audit-log';
+import { fetchVendorEnvelopes } from './services/discovery';
 
 import { renderDashboard } from './views/dashboard';
 import { renderEnvelopes } from './views/envelopes';
 import { renderVendors } from './views/vendors';
 import { renderAudit } from './views/audit';
-
-// Import SDK and register mock agents
-import './sdk/mock-agents';
-import { createRunner, registry } from './sdk/index';
 
 // --- App State ---
 let activeVendorId = 'local-default';
@@ -40,19 +37,37 @@ async function init(): Promise<void> {
   }
 
   if (vendors.length === 0) {
-    // DB is empty — seed the default vendor
+    // DB is empty — seed the default demo vendor (discovered from .well-known)
     try {
       const seeded = await createVendor({
-        name: 'killswitch-advisory',
+        domain: 'killswitch-advisory.com',
+        name: 'Killswitch Advisory',
         otvp_id: 'otvp:org:killswitch-advisory',
-        environment: 'production',
-        cloud_provider: 'aws',
-        region: 'us-east-2',
-        config: {},
+        config_url: '/.well-known/otvp/otvp-config.json',
+        public_key_kid: 'killswitch-2026-primary',
+        public_key: 'MCowBQYDK2VwAyEAx2XpVUgWNeYfGJhV1p0k8kR2J7QzGWL4N8vJqHMbUno=',
+        dns_verified: false,
+        domains_covered: [
+          'data_protection.encryption.at_rest',
+          'data_protection.encryption.key_management',
+          'data_protection.encryption.in_transit',
+          'identity_and_access.authentication.mfa_enforcement',
+          'identity_and_access.lifecycle.provisioning',
+          'identity_and_access.authorization.least_privilege',
+          'network_security.segmentation',
+          'network_security.ingress_controls',
+          'detection_and_response.logging.completeness',
+          'infrastructure.compute.vulnerability_management',
+          'operational_resilience.backup.coverage',
+        ],
+        refresh_interval_seconds: 3600,
+        submission_method: 'discovery',
+        last_fetched_at: null,
+        last_envelope_at: null,
         is_active: true,
       });
       vendors = [seeded];
-      await logAudit('vendor.created', { vendor_id: seeded.id, details: { name: seeded.name, seeded: true } });
+      await logAudit('vendor.created', { vendor_id: seeded.id, details: { domain: seeded.domain, seeded: true } });
     } catch (err) {
       console.warn('Failed to seed vendor, using local fallback:', err);
       vendors = getLocalVendors();
@@ -63,9 +78,9 @@ async function init(): Promise<void> {
     activeVendorId = vendors[0].id;
   }
 
-  // Load mock data on first run
+  // Load demo envelopes on first run by fetching from the vendor's endpoint
   if (getLocalEnvelopes().length === 0) {
-    await loadMockData();
+    await loadInitialEnvelopes(vendors[0]);
   }
 
   // Render shell
@@ -95,31 +110,46 @@ async function init(): Promise<void> {
   startRouter();
 }
 
-async function loadMockData(): Promise<void> {
-  // Run all mock agents to generate demo envelopes
-  const runner = createRunner();
-  let vendors: Vendor[];
-  try {
-    vendors = await getVendors();
-  } catch {
-    vendors = getLocalVendors();
-  }
-  const vendor = vendors[0];
+/** Load initial envelopes from the vendor's .well-known endpoint (or mock agents as fallback) */
+async function loadInitialEnvelopes(vendor?: Vendor): Promise<void> {
   if (!vendor) return;
 
-  const result = await runner.run({
+  // Try fetching from the vendor's published endpoint
+  try {
+    const endpointPath = '/.well-known/otvp/envelopes/latest.json';
+    const result = await fetchVendorEnvelopes(vendor.domain, endpointPath);
+
+    if (result.envelopes.length > 0) {
+      const envelopes = result.envelopes as TrustEnvelope[];
+      setLocalEnvelopes(envelopes);
+      const ra = computeRiskAssessment(envelopes, vendor.id);
+      riskHistory.push(ra);
+      await logAudit('envelopes.fetched', {
+        vendor_id: vendor.id,
+        details: { count: envelopes.length, source: vendor.domain },
+      });
+      return;
+    }
+  } catch (err) {
+    console.warn('Failed to fetch envelopes from vendor endpoint, falling back to mock agents:', err);
+  }
+
+  // Fallback: run mock agents locally
+  const { createRunner } = await import('./sdk/index');
+  await import('./sdk/mock-agents');
+
+  const runner = createRunner();
+  const agentResult = await runner.run({
     vendor_id: vendor.id,
     organization: vendor.name,
     otvp_id: vendor.otvp_id,
-    environment: vendor.environment,
-    region: vendor.region,
+    environment: 'production',
+    region: 'us-east-2',
     credentials: {},
   });
 
-  setLocalEnvelopes(result.envelopes);
-
-  // Compute initial risk assessment
-  const ra = computeRiskAssessment(result.envelopes, vendor.id);
+  setLocalEnvelopes(agentResult.envelopes);
+  const ra = computeRiskAssessment(agentResult.envelopes, vendor.id);
   riskHistory.push(ra);
 }
 
@@ -144,7 +174,7 @@ function showEnvelopes(): void {
 
 async function showVendors(): Promise<void> {
   const vendors = await getVendors();
-  renderVendors(getViewContainer(), vendors, runScan, async () => {
+  renderVendors(getViewContainer(), vendors, fetchEnvelopesForVendor, async () => {
     const updated = await getVendors();
     renderShell(updated);
     showVendors();
@@ -155,57 +185,71 @@ async function showAudit(): Promise<void> {
   await renderAudit(getViewContainer());
 }
 
-async function runScan(vendorId: string): Promise<void> {
+/** Fetch envelopes from a vendor's published .well-known endpoint */
+async function fetchEnvelopesForVendor(vendorId: string): Promise<void> {
   const vendors = await getVendors();
   const vendor = vendors.find(v => v.id === vendorId);
   if (!vendor) return;
 
-  await logAudit('scan.started', { vendor_id: vendorId, details: { trigger: 'manual' } });
+  await logAudit('fetch.started', { vendor_id: vendorId, details: { domain: vendor.domain } });
 
   const container = getViewContainer();
-  const prevHTML = container.innerHTML;
   container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;padding:60px;gap:12px">
-    <div style="color:#818cf8;font-size:14px" class="mono">Running ${registry.getAll().length} agents...</div>
+    <div style="color:#818cf8;font-size:14px" class="mono">Fetching envelopes from ${vendor.domain}...</div>
   </div>`;
 
   try {
-    const runner = createRunner();
-    const result = await runner.run({
-      vendor_id: vendor.id,
-      organization: vendor.name,
-      otvp_id: vendor.otvp_id,
-      environment: vendor.environment,
-      region: vendor.region,
-      credentials: {},
+    const endpointPath = '/.well-known/otvp/envelopes/latest.json';
+    const result = await fetchVendorEnvelopes(vendor.domain, endpointPath);
+
+    if (result.error) {
+      throw new Error(result.error);
+    }
+
+    const envelopes = result.envelopes as TrustEnvelope[];
+    setLocalEnvelopes(envelopes);
+
+    // Update vendor fetch timestamp
+    await updateVendor(vendorId, {
+      last_fetched_at: new Date().toISOString(),
+      last_envelope_at: envelopes.length > 0 ? envelopes[0].generated_at : null,
     });
 
-    // Store envelopes
-    setLocalEnvelopes(result.envelopes);
-
     // Log each envelope
-    for (const env of result.envelopes) {
-      await logAudit('envelope.stored', { vendor_id: vendorId, envelope_id: env.envelope_id });
+    for (const env of envelopes) {
+      await logAudit('envelope.received', {
+        vendor_id: vendorId,
+        envelope_id: env.envelope_id,
+        details: { domain: vendor.domain, composite_level: env.composite_level },
+      });
     }
 
     // Compute risk
-    const ra = computeRiskAssessment(result.envelopes, vendorId);
+    const ra = computeRiskAssessment(envelopes, vendorId);
     riskHistory.push(ra);
     await logAudit('risk.computed', {
       vendor_id: vendorId,
       details: { overall_score: ra.overall_score, overall_level: ra.overall_level },
     });
 
-    await logAudit('scan.completed', {
+    await logAudit('fetch.completed', {
       vendor_id: vendorId,
-      details: { envelopes: result.envelopes.length, errors: result.errors.length },
+      details: { envelopes: envelopes.length, domain: vendor.domain },
     });
 
     // Navigate to dashboard to show results
     activeVendorId = vendorId;
     navigate('/');
   } catch (err) {
-    await logAudit('scan.failed', { vendor_id: vendorId, details: { error: String(err) } });
-    container.innerHTML = prevHTML;
+    await logAudit('fetch.failed', {
+      vendor_id: vendorId,
+      details: { error: String(err), domain: vendor.domain },
+    });
+    container.innerHTML = `<div style="text-align:center;padding:60px">
+      <div style="color:var(--color-red);font-size:14px;margin-bottom:8px">Failed to fetch envelopes</div>
+      <div style="color:var(--text-faint);font-size:12px">${String(err)}</div>
+      <button class="btn btn-secondary" style="margin-top:16px" onclick="window.location.hash='#/vendors'">Back to Vendors</button>
+    </div>`;
   }
 }
 

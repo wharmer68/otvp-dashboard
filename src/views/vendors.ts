@@ -1,78 +1,118 @@
-import type { Vendor } from '../types/vendor';
-import { vendorFormHTML, vendorListHTML } from '../components/vendor-form';
-import { createVendor, updateVendor, getVendors } from '../services/vendor-store';
+import type { Vendor, DiscoveryResult } from '../types/vendor';
+import { vendorDiscoverFormHTML, discoveryResultHTML, vendorListHTML } from '../components/vendor-form';
+import { createVendor, deleteVendor } from '../services/vendor-store';
+import { discoverVendor } from '../services/discovery';
 import { logAudit } from '../services/audit-log';
 
 export function renderVendors(
   container: HTMLElement,
   vendors: Vendor[],
-  onScan: (vendorId: string) => void,
+  onFetchEnvelopes: (vendorId: string) => void,
   onRefresh: () => void,
 ): void {
   let showForm = false;
-  let editVendor: Vendor | undefined;
+  let lastDiscovery: DiscoveryResult | null = null;
 
   function render() {
     let html = `
       <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
           <div class="page-title">Vendor Targets</div>
-          <div class="page-subtitle">Configure organizations to scan with OTVP agents</div>
+          <div class="page-subtitle">Discover vendors by domain \u2014 they publish signed envelopes, you verify and review</div>
         </div>
-        <button class="btn btn-primary" onclick="window.__showVendorForm()">+ Add Vendor</button>
+        <button class="btn btn-primary" onclick="window.__showVendorForm()">+ Discover Vendor</button>
       </div>
     `;
 
     if (showForm) {
-      html += vendorFormHTML(editVendor);
+      html += vendorDiscoverFormHTML();
     }
 
-    html += vendorListHTML(vendors.map(v => ({ vendor: v })));
+    html += vendorListHTML(vendors);
 
     container.innerHTML = html;
+
+    // If we have a discovery result, render it into the placeholder
+    if (lastDiscovery) {
+      const resultEl = document.getElementById('discovery-result');
+      if (resultEl) resultEl.innerHTML = discoveryResultHTML(lastDiscovery);
+    }
   }
 
   (window as any).__showVendorForm = () => {
     showForm = true;
-    editVendor = undefined;
+    lastDiscovery = null;
     render();
   };
 
   (window as any).__cancelVendorForm = () => {
     showForm = false;
-    editVendor = undefined;
+    lastDiscovery = null;
     render();
   };
 
-  (window as any).__editVendor = async (id: string) => {
-    editVendor = vendors.find(v => v.id === id);
-    showForm = true;
-    render();
+  (window as any).__discoverVendor = async () => {
+    const domainInput = document.getElementById('vf-domain') as HTMLInputElement;
+    const btn = document.getElementById('discover-btn') as HTMLButtonElement;
+    const resultEl = document.getElementById('discovery-result');
+    if (!domainInput?.value) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Discovering...';
+    if (resultEl) resultEl.innerHTML = `<div style="color:var(--accent-indigo-light);font-size:12px;padding:16px" class="mono">Fetching .well-known/otvp/otvp-config.json...</div>`;
+
+    lastDiscovery = await discoverVendor(domainInput.value);
+
+    btn.disabled = false;
+    btn.textContent = 'Discover';
+    if (resultEl) resultEl.innerHTML = discoveryResultHTML(lastDiscovery);
   };
 
-  (window as any).__saveVendor = async () => {
-    const name = (document.getElementById('vf-name') as HTMLInputElement).value;
-    const otvp_id = (document.getElementById('vf-otvp-id') as HTMLInputElement).value;
-    const cloud_provider = (document.getElementById('vf-provider') as HTMLSelectElement).value;
-    const region = (document.getElementById('vf-region') as HTMLInputElement).value;
-    const environment = (document.getElementById('vf-env') as HTMLSelectElement).value;
-    const existingId = (document.getElementById('vf-id') as HTMLInputElement)?.value;
+  (window as any).__confirmAddVendor = async () => {
+    if (!lastDiscovery?.success || !lastDiscovery.config) return;
 
-    if (existingId) {
-      await updateVendor(existingId, { name, otvp_id, cloud_provider, region, environment });
-      await logAudit('vendor.updated', { vendor_id: existingId, details: { name } });
-    } else {
-      const v = await createVendor({ name, otvp_id, cloud_provider, region, environment, config: {}, is_active: true });
-      await logAudit('vendor.created', { vendor_id: v.id, details: { name, otvp_id } });
-    }
+    const config = lastDiscovery.config;
+    const activeKey = config.public_keys.find(k => !k.revoked) || config.public_keys[0];
+
+    const vendor = await createVendor({
+      domain: lastDiscovery.domain,
+      name: config.organization,
+      otvp_id: config.otvp_id,
+      config_url: `https://${lastDiscovery.domain}/.well-known/otvp/otvp-config.json`,
+      public_key_kid: activeKey.kid,
+      public_key: activeKey.public_key,
+      dns_verified: lastDiscovery.dns_verified,
+      domains_covered: config.domains_covered,
+      refresh_interval_seconds: config.refresh_interval_seconds,
+      submission_method: 'discovery',
+      last_fetched_at: null,
+      last_envelope_at: null,
+      is_active: true,
+    });
+
+    await logAudit('vendor.created', {
+      vendor_id: vendor.id,
+      details: {
+        domain: lastDiscovery.domain,
+        otvp_id: config.otvp_id,
+        public_key_kid: activeKey.kid,
+        dns_verified: lastDiscovery.dns_verified,
+      },
+    });
 
     showForm = false;
-    editVendor = undefined;
+    lastDiscovery = null;
     onRefresh();
   };
 
-  (window as any).__runScan = (vendorId: string) => {
-    onScan(vendorId);
+  (window as any).__fetchEnvelopes = (vendorId: string) => {
+    onFetchEnvelopes(vendorId);
+  };
+
+  (window as any).__removeVendor = async (id: string) => {
+    await deleteVendor(id);
+    await logAudit('vendor.deleted', { vendor_id: id });
+    onRefresh();
   };
 
   render();

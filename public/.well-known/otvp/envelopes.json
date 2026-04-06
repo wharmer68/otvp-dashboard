@@ -1,0 +1,834 @@
+[
+  {
+    "envelope_id": "te-70314449e994",
+    "schema_version": "1.0",
+    "generated_at": "2026-02-15T23:57:00.171588+00:00",
+    "valid_until": "2026-02-16T00:57:00.171588+00:00",
+    "ttl_seconds": 3600,
+    "subject": {
+      "organization": "killswitch-advisory",
+      "otvp_id": "otvp:org:killswitch-advisory",
+      "environment": "production"
+    },
+    "relying_party": null,
+    "query_ref": null,
+    "disclosure_level": "claims_only",
+    "claims": [
+      {
+        "claim_id": "cl-65ff2eda6c26",
+        "domain": "data_protection.encryption.key_management",
+        "assertion": "All customer-managed KMS keys have automatic rotation enabled",
+        "result": "SATISFIED",
+        "confidence": 1,
+        "evidence_refs": [
+          "ev-71bd7b1f0422",
+          "ev-b73296f9d2d1"
+        ],
+        "evidence_count": 2,
+        "opinion": {
+          "assessment": "No customer-managed keys found. 2 AWS-managed key(s) in use (auto-rotating).",
+          "context": null,
+          "caveats": [],
+          "recommendations": [
+            "Consider using customer-managed CMKs for sensitive workloads to enable granular access control and custom rotation schedules."
+          ]
+        },
+        "scope": {
+          "environment": "test",
+          "services": [
+            "KMS"
+          ],
+          "regions": [
+            "us-east-2"
+          ],
+          "accounts": [],
+          "exclusions": []
+        },
+        "valid_from": "2026-02-15T23:57:00.171401+00:00",
+        "ttl_seconds": 3600,
+        "agent_id": "aws-kms-agent-v1",
+        "agent_version": "1.0.0",
+        "agent_certification": null,
+        "signature": "ltheEqwyF3WwLrkSN1fu3KZIPgiHuTAGYTcaL30Q4iUhGeybO0uUwbkef0+wQN0dBTeXkX3UkCKpLmNjS21BAg=="
+      }
+    ],
+    "evidence_summary": {
+      "total_items": 2,
+      "merkle_root": "03129916cdc15af49b2da706d80147da49744bbbad60bccf5166698e483b3925",
+      "collection_window_start": "2026-02-15T23:57:00.095332+00:00",
+      "collection_window_end": "2026-02-15T23:57:00.166229+00:00",
+      "domains_covered": [
+        "data_protection.encryption.key_management"
+      ]
+    },
+    "composite_level": "VERIFIED",
+    "domain_scores": {
+      "data_protection.encryption": {
+        "level": "VERIFIED",
+        "confidence": 1,
+        "claims_satisfied": 1,
+        "claims_total": 1
+      }
+    },
+    "signer_id": "aws-kms-agent-v1",
+    "signature": "lqN6vUbFFEgcfdA/b5eqOEVSoydD2mFXZ7CcXkUcFJBJG7fxiZlrWWquVNHqUWBzNGhAlMaimlbRXcJAs5D6Dg=="
+  },
+  {
+    "envelope_id": "te-a54103505d9a",
+    "schema_version": "1.0",
+    "generated_at": "2026-02-15T23:57:01.066893+00:00",
+    "valid_until": "2026-02-16T00:57:01.066893+00:00",
+    "ttl_seconds": 3600,
+    "subject": {
+      "organization": "killswitch-advisory",
+      "otvp_id": "otvp:org:killswitch-advisory",
+      "environment": "production"
+    },
+    "relying_party": null,
+    "query_ref": null,
+    "disclosure_level": "claims_only",
+    "claims": [
+      {
+        "claim_id": "cl-cc5f4d76eb3d",
+        "domain": "network_security.segmentation",
+        "assertion": "No high-risk ports are exposed to the public internet via security groups",
+        "result": "SATISFIED",
+        "confidence": 1,
+        "evidence_refs": [
+          "ev-3dcf97361b25"
+        ],
+        "evidence_count": 1,
+        "opinion": {
+          "assessment": "All 1 security group(s) properly segmented. No high-risk ports exposed to internet.",
+          "context": null,
+          "caveats": [],
+          "recommendations": []
+        },
+        "scope": {
+          "environment": "test",
+          "services": [
+            "VPC",
+            "SecurityGroups"
+          ],
+          "regions": [
+            "us-east-2"
+          ],
+          "accounts": [],
+          "exclusions": []
+        },
+        "valid_from": "2026-02-15T23:57:01.064519+00:00",
+        "ttl_seconds": 3600,
+        "agent_id": "aws-network-agent-v1",
+        "agent_version": "1.0.0",
+        "agent_certification": null,
+        "signature": "6VPv61AiKGspaS6jVqdwPq8uFFwRGVB4b7C9IjiueZMwBCMkTw5xQYIqBg6RQkltMkKlkw0T6CBSmTMoySThDg=="
+      }
+    ],
+    "evidence_summary": {
+      "total_items": 1,
+      "merkle_root": "b340027d6f293c59297f2a7a34d70ca34e889bacfc843745f9f86c1436d5321f",
+      "collection_window_start": "2026-02-15T23:57:01.061194+00:00",
+      "collection_window_end": "2026-02-15T23:57:01.061194+00:00",
+      "domains_covered": [
+        "network_security.segmentation"
+      ]
+    },
+    "composite_level": "VERIFIED",
+    "domain_scores": {
+      "network_security.segmentation": {
+        "level": "VERIFIED",
+        "confidence": 1,
+        "claims_satisfied": 1,
+        "claims_total": 1
+      }
+    },
+    "signer_id": "aws-network-agent-v1",
+    "signature": "sGWIoznXrF439zHQStsVa5cBNMQaHMNKmNWsPUUvIvXtzy37H72aUZkVDUprMxxETqzqh5ibuHnK+r1EKZ71BA=="
+  },
+  {
+    "envelope_id": "te-43ea67289dfa",
+    "schema_version": "1.0",
+    "generated_at": "2026-02-15T23:57:05.249982+00:00",
+    "valid_until": "2026-02-16T00:57:05.249982+00:00",
+    "ttl_seconds": 3600,
+    "subject": {
+      "organization": "killswitch-advisory",
+      "otvp_id": "otvp:org:killswitch-advisory",
+      "environment": "production"
+    },
+    "relying_party": null,
+    "query_ref": null,
+    "disclosure_level": "claims_only",
+    "claims": [
+      {
+        "claim_id": "cl-a1f5d8b48268",
+        "domain": "network_security.ingress_controls",
+        "assertion": "All public-facing resources have controlled ingress with WAF protection on internet-facing load balancers",
+        "result": "SATISFIED",
+        "confidence": 1,
+        "evidence_refs": [],
+        "evidence_count": 0,
+        "opinion": {
+          "assessment": "No public-facing security groups or internet-facing load balancers found. Attack surface is minimal. 100% of resources verified.",
+          "context": null,
+          "caveats": [],
+          "recommendations": []
+        },
+        "scope": {
+          "environment": "test",
+          "services": [
+            "VPC",
+            "ALB",
+            "WAF"
+          ],
+          "regions": [
+            "us-east-2"
+          ],
+          "accounts": [],
+          "exclusions": []
+        },
+        "valid_from": "2026-02-15T23:57:05.247065+00:00",
+        "ttl_seconds": 3600,
+        "agent_id": "aws-ingress-agent-v1",
+        "agent_version": "1.0.0",
+        "agent_certification": null,
+        "signature": "vhfQMn9VxQDRCdAR8VXNho/Lx+Nes8ZzoxNXBlawAaa4r/nYYD5dKLkJiNNPN2Fv7RAMvAcVBcf0Q4MsmtEUAg=="
+      }
+    ],
+    "evidence_summary": {
+      "total_items": 0,
+      "merkle_root": null,
+      "collection_window_start": null,
+      "collection_window_end": null,
+      "domains_covered": []
+    },
+    "composite_level": "VERIFIED",
+    "domain_scores": {
+      "network_security.ingress_controls": {
+        "level": "VERIFIED",
+        "confidence": 1,
+        "claims_satisfied": 1,
+        "claims_total": 1
+      }
+    },
+    "signer_id": "aws-ingress-agent-v1",
+    "signature": "Q4bB5w11EKmGYN3D8/MqAouCuYH9F8VlE4WmrVQ+cXGzSm55U6HcyvtQumXpHejZl9zhH0aIHyeXWA333jg9BA=="
+  },
+  {
+    "envelope_id": "te-75afdc77426b",
+    "schema_version": "1.0",
+    "generated_at": "2026-02-15T23:57:06.832372+00:00",
+    "valid_until": "2026-02-16T00:57:06.832372+00:00",
+    "ttl_seconds": 3600,
+    "subject": {
+      "organization": "killswitch-advisory",
+      "otvp_id": "otvp:org:killswitch-advisory",
+      "environment": "production"
+    },
+    "relying_party": null,
+    "query_ref": null,
+    "disclosure_level": "claims_only",
+    "claims": [
+      {
+        "claim_id": "cl-491df2b29dad",
+        "domain": "identity_and_access.authorization.least_privilege",
+        "assertion": "No IAM users or roles have overprivileged admin access attached directly",
+        "result": "SATISFIED",
+        "confidence": 1,
+        "evidence_refs": [
+          "ev-71ed4d99e3c0",
+          "ev-743922888e59",
+          "ev-a28634cb4b34",
+          "ev-7d494bd09a7c"
+        ],
+        "evidence_count": 4,
+        "opinion": {
+          "assessment": "All 4 IAM principal(s) follow least privilege. No admin policies directly attached.",
+          "context": null,
+          "caveats": [],
+          "recommendations": []
+        },
+        "scope": {
+          "environment": "test",
+          "services": [
+            "IAM"
+          ],
+          "regions": [
+            "global"
+          ],
+          "accounts": [],
+          "exclusions": []
+        },
+        "valid_from": "2026-02-15T23:57:06.831921+00:00",
+        "ttl_seconds": 3600,
+        "agent_id": "aws-privilege-agent-v1",
+        "agent_version": "1.0.0",
+        "agent_certification": null,
+        "signature": "GOONDaUO13h51Paz4HuaoKMEFqPzeu1+PALUl+nUXyU+AN1VjqxIEEP1MabGSvel4JBxt0yt7b4scnUcvQhoBQ=="
+      }
+    ],
+    "evidence_summary": {
+      "total_items": 4,
+      "merkle_root": "9ce3473106cb0c87b0ba3317ea584493610349ea6c09bc9465e30d2bbd20d666",
+      "collection_window_start": "2026-02-15T23:57:06.109415+00:00",
+      "collection_window_end": "2026-02-15T23:57:06.828137+00:00",
+      "domains_covered": [
+        "identity_and_access.authorization.least_privilege"
+      ]
+    },
+    "composite_level": "VERIFIED",
+    "domain_scores": {
+      "identity_and_access.authorization": {
+        "level": "VERIFIED",
+        "confidence": 1,
+        "claims_satisfied": 1,
+        "claims_total": 1
+      }
+    },
+    "signer_id": "aws-privilege-agent-v1",
+    "signature": "ISOGXpK9XhLwyLJb6IbQ3R8llqkSjP2eLN4hxkZZHyP429DmkNsc9RSMXh5xuGng/4fIvQFhzGpNfrt9E5JGDA=="
+  },
+  {
+    "envelope_id": "te-444c049656dd",
+    "schema_version": "1.0",
+    "generated_at": "2026-02-15T23:56:57.997074+00:00",
+    "valid_until": "2026-02-16T00:56:57.997074+00:00",
+    "ttl_seconds": 3600,
+    "subject": {
+      "organization": "killswitch-advisory",
+      "otvp_id": "otvp:org:killswitch-advisory",
+      "environment": "production"
+    },
+    "relying_party": null,
+    "query_ref": null,
+    "disclosure_level": "claims_only",
+    "claims": [
+      {
+        "claim_id": "cl-921898e60efb",
+        "domain": "data_protection.encryption.at_rest",
+        "assertion": "All production storage resources are encrypted at rest",
+        "result": "PARTIAL",
+        "confidence": 0.5,
+        "evidence_refs": [
+          "ev-80480fb12958",
+          "ev-9b5df2bc7a80",
+          "ev-dc70a15755e6",
+          "ev-693c437fbf72",
+          "ev-103c30af4710",
+          "ev-965b353752f6"
+        ],
+        "evidence_count": 6,
+        "opinion": {
+          "assessment": "3/6 resources satisfy encryption_enabled. 3 non-compliant.",
+          "context": null,
+          "caveats": [
+            "3 resource(s) non-compliant: arn:aws:rds:us-east-2:294137048789:db:otvp-prod-analytics, arn:aws:s3:::otvp-prod-logs, arn:aws:ec2:us-east-2:294137048789:volume/vol-022d3b7b946de5cde"
+          ],
+          "recommendations": []
+        },
+        "scope": {
+          "environment": "test",
+          "services": [
+            "RDS",
+            "S3",
+            "EBS"
+          ],
+          "regions": [
+            "us-east-2"
+          ],
+          "accounts": [],
+          "exclusions": []
+        },
+        "valid_from": "2026-02-15T23:56:57.996925+00:00",
+        "ttl_seconds": 3600,
+        "agent_id": "aws-encryption-agent-v1",
+        "agent_version": "1.0.0",
+        "agent_certification": null,
+        "signature": "7xcHGTmZ6wr1AKAfvc16S8vHEi6Api0ZOICWKwileG797J5WCRI3F+FhQ94LngUsuXz7snznkPZlHKfayP9RAA=="
+      }
+    ],
+    "evidence_summary": {
+      "total_items": 6,
+      "merkle_root": "ccecedcf803e2a58be0442021e296b5fff65470f4e6d4af208d1c276e1df9105",
+      "collection_window_start": "2026-02-15T23:56:55.936726+00:00",
+      "collection_window_end": "2026-02-15T23:56:57.991599+00:00",
+      "domains_covered": [
+        "data_protection.encryption.at_rest"
+      ]
+    },
+    "composite_level": "CRITICAL",
+    "domain_scores": {
+      "data_protection.encryption": {
+        "level": "CRITICAL",
+        "confidence": 0.5,
+        "claims_satisfied": 0,
+        "claims_total": 1
+      }
+    },
+    "signer_id": "aws-encryption-agent-v1",
+    "signature": "j50/7Tm7Lh/wlxVDby6d9YdL7wpzhYzbZcloMgSk/BIkV/V4cSLeBG1h9Hg3S6vhuz/SIu8akDiLX2ccugkfAw=="
+  },
+  {
+    "envelope_id": "te-7180972bc815",
+    "schema_version": "1.0",
+    "generated_at": "2026-02-15T23:56:59.377719+00:00",
+    "valid_until": "2026-02-16T00:56:59.377719+00:00",
+    "ttl_seconds": 3600,
+    "subject": {
+      "organization": "killswitch-advisory",
+      "otvp_id": "otvp:org:killswitch-advisory",
+      "environment": "production"
+    },
+    "relying_party": null,
+    "query_ref": null,
+    "disclosure_level": "claims_only",
+    "claims": [
+      {
+        "claim_id": "cl-e714f8063c27",
+        "domain": "identity_and_access.authentication.mfa_enforcement",
+        "assertion": "All IAM users with console access have MFA enabled",
+        "result": "PARTIAL",
+        "confidence": 0.5,
+        "evidence_refs": [
+          "ev-cb2ce71c1ec7",
+          "ev-57b05dc7d04c",
+          "ev-4447e816a00b"
+        ],
+        "evidence_count": 3,
+        "opinion": {
+          "assessment": "1/2 console user(s) have MFA enabled.",
+          "context": null,
+          "caveats": [
+            "Console users WITHOUT MFA: otvp-dev-bob",
+            "1 programmatic-only user(s) excluded from console MFA scope"
+          ],
+          "recommendations": [
+            "Enable MFA for: otvp-dev-bob",
+            "Consider enforcing MFA via IAM policy (aws:MultiFactorAuthPresent condition key)"
+          ]
+        },
+        "scope": {
+          "environment": "test",
+          "services": [
+            "IAM"
+          ],
+          "regions": [
+            "global"
+          ],
+          "accounts": [],
+          "exclusions": []
+        },
+        "valid_from": "2026-02-15T23:56:59.377264+00:00",
+        "ttl_seconds": 3600,
+        "agent_id": "aws-mfa-agent-v1",
+        "agent_version": "1.0.0",
+        "agent_certification": null,
+        "signature": "+Kw1y27CZt7W4vmKS5FCJUKGXWVS1kZPtHiqUtJ0eXF2rIn0+T1P2AUVtbMGK5YAFjVr972upXEmRlok4Dd+Bg=="
+      }
+    ],
+    "evidence_summary": {
+      "total_items": 3,
+      "merkle_root": "6354da2291494b5935baf257dfd664633bee2d3e2c82555461e00e5dc4fc109c",
+      "collection_window_start": "2026-02-15T23:56:58.917349+00:00",
+      "collection_window_end": "2026-02-15T23:56:59.373662+00:00",
+      "domains_covered": [
+        "identity_and_access.authentication.mfa_enforcement"
+      ]
+    },
+    "composite_level": "CRITICAL",
+    "domain_scores": {
+      "identity_and_access.authentication": {
+        "level": "CRITICAL",
+        "confidence": 0.5,
+        "claims_satisfied": 0,
+        "claims_total": 1
+      }
+    },
+    "signer_id": "aws-mfa-agent-v1",
+    "signature": "Fs6W9uhSEqtBcMfKynJQTgHLJLRMUeyZOwABQcgW5YbmvyyK1aM45cpkXq0Bdd2GvNrcHdOI/taq1lmR4wjKBA=="
+  },
+  {
+    "envelope_id": "te-02d6371a5f01",
+    "schema_version": "1.0",
+    "generated_at": "2026-02-15T23:57:02.144389+00:00",
+    "valid_until": "2026-02-16T00:57:02.144389+00:00",
+    "ttl_seconds": 3600,
+    "subject": {
+      "organization": "killswitch-advisory",
+      "otvp_id": "otvp:org:killswitch-advisory",
+      "environment": "production"
+    },
+    "relying_party": null,
+    "query_ref": null,
+    "disclosure_level": "claims_only",
+    "claims": [
+      {
+        "claim_id": "cl-4cde4729b8dc",
+        "domain": "detection_and_response.logging.completeness",
+        "assertion": "Audit logging is enabled with multi-region CloudTrail and VPC flow logs on all VPCs",
+        "result": "NOT_SATISFIED",
+        "confidence": 1,
+        "evidence_refs": [
+          "ev-99d639bcd3d9",
+          "ev-d166379dd175"
+        ],
+        "evidence_count": 2,
+        "opinion": {
+          "assessment": "Only 0/2 logging checks passed. Significant gaps in audit logging coverage.",
+          "context": null,
+          "caveats": [
+            "No compliant CloudTrail configuration found",
+            "VPC 'unnamed' (vpc-0f4888f54d2296acb) has no flow logs enabled"
+          ],
+          "recommendations": [
+            "Create a multi-region CloudTrail with log file validation enabled",
+            "Enable VPC flow logs on all VPCs — send to CloudWatch Logs or S3"
+          ]
+        },
+        "scope": {
+          "environment": "test",
+          "services": [
+            "CloudTrail",
+            "VPC FlowLogs"
+          ],
+          "regions": [
+            "us-east-2"
+          ],
+          "accounts": [],
+          "exclusions": []
+        },
+        "valid_from": "2026-02-15T23:57:02.143977+00:00",
+        "ttl_seconds": 3600,
+        "agent_id": "aws-logging-agent-v1",
+        "agent_version": "1.0.0",
+        "agent_certification": null,
+        "signature": "Q+VHNbS2I4I5yXWC0XWZQ9m6i2q/w5xhwEIamJT7xd5YTnv5DQmMl9v4zsNDFIAoCVYWpp4PwNhsL4wA9DW4BQ=="
+      }
+    ],
+    "evidence_summary": {
+      "total_items": 2,
+      "merkle_root": "24acc6f796bef83a75098290fd480e31f63b1bf1c29f19a4c24e4e254a685a37",
+      "collection_window_start": "2026-02-15T23:57:01.644015+00:00",
+      "collection_window_end": "2026-02-15T23:57:02.140762+00:00",
+      "domains_covered": [
+        "detection_and_response.logging.completeness"
+      ]
+    },
+    "composite_level": "CRITICAL",
+    "domain_scores": {
+      "detection_and_response.logging": {
+        "level": "CRITICAL",
+        "confidence": 1,
+        "claims_satisfied": 0,
+        "claims_total": 1
+      }
+    },
+    "signer_id": "aws-logging-agent-v1",
+    "signature": "8Jt7ave1YGJx4KBs+yc5p02Pjr3o2PJvrPF9Pn5rIcauMT6Hf/AzjrIKjacQ5cRqvOkI/MYCXcRuavtKQ01vCQ=="
+  },
+  {
+    "envelope_id": "te-f2328629d897",
+    "schema_version": "1.0",
+    "generated_at": "2026-02-15T23:57:03.396513+00:00",
+    "valid_until": "2026-02-16T00:57:03.396513+00:00",
+    "ttl_seconds": 3600,
+    "subject": {
+      "organization": "killswitch-advisory",
+      "otvp_id": "otvp:org:killswitch-advisory",
+      "environment": "production"
+    },
+    "relying_party": null,
+    "query_ref": null,
+    "disclosure_level": "claims_only",
+    "claims": [
+      {
+        "claim_id": "cl-3b62e48adf57",
+        "domain": "identity_and_access.lifecycle.provisioning",
+        "assertion": "All IAM accounts are actively used with no stale credentials",
+        "result": "NOT_SATISFIED",
+        "confidence": 1,
+        "evidence_refs": [
+          "ev-1a33cb616da1",
+          "ev-87533b271555",
+          "ev-8069d5beaae5"
+        ],
+        "evidence_count": 3,
+        "opinion": {
+          "assessment": "Only 1/3 IAM accounts are healthy.",
+          "context": null,
+          "caveats": [
+            "Stale console accounts (>90d): otvp-dev-alice (no login in 0d), otvp-dev-bob (no login in 0d)"
+          ],
+          "recommendations": [
+            "Disable or remove console access for inactive users"
+          ]
+        },
+        "scope": {
+          "environment": "test",
+          "services": [
+            "IAM"
+          ],
+          "regions": [
+            "global"
+          ],
+          "accounts": [],
+          "exclusions": []
+        },
+        "valid_from": "2026-02-15T23:57:03.396085+00:00",
+        "ttl_seconds": 3600,
+        "agent_id": "aws-lifecycle-agent-v1",
+        "agent_version": "1.0.0",
+        "agent_certification": null,
+        "signature": "zMdyak3vP0Y1oWVdoLVVC3ImSihnEEeBK2nZOvY177D3/dJRakLuaVAAiFvrnFq60enL+sGHUKtfqRqrh5dRAQ=="
+      }
+    ],
+    "evidence_summary": {
+      "total_items": 3,
+      "merkle_root": "6772eb4bc0609a1410344a7f235aeead5062c405745c8c2e81be238ff23f08f7",
+      "collection_window_start": "2026-02-15T23:57:02.995562+00:00",
+      "collection_window_end": "2026-02-15T23:57:03.392412+00:00",
+      "domains_covered": [
+        "identity_and_access.lifecycle.provisioning"
+      ]
+    },
+    "composite_level": "CRITICAL",
+    "domain_scores": {
+      "identity_and_access.lifecycle": {
+        "level": "CRITICAL",
+        "confidence": 1,
+        "claims_satisfied": 0,
+        "claims_total": 1
+      }
+    },
+    "signer_id": "aws-lifecycle-agent-v1",
+    "signature": "aB6yKUUHfuzvoVOW8Fcj+LQadOOVJl76ih18ft6GZFDOBFEbBO45WdqmKqlxQdyoXKH4nxdcIppWEE04z3MeCA=="
+  },
+  {
+    "envelope_id": "te-4339f9bd30da",
+    "schema_version": "1.0",
+    "generated_at": "2026-02-15T23:57:04.300941+00:00",
+    "valid_until": "2026-02-16T00:57:04.300941+00:00",
+    "ttl_seconds": 3600,
+    "subject": {
+      "organization": "killswitch-advisory",
+      "otvp_id": "otvp:org:killswitch-advisory",
+      "environment": "production"
+    },
+    "relying_party": null,
+    "query_ref": null,
+    "disclosure_level": "claims_only",
+    "claims": [
+      {
+        "claim_id": "cl-5d1b0df9f07e",
+        "domain": "data_protection.encryption.in_transit",
+        "assertion": "All load balancers enforce TLS 1.2+ and certificates are valid",
+        "result": "NOT_APPLICABLE",
+        "confidence": 1,
+        "evidence_refs": [],
+        "evidence_count": 0,
+        "opinion": {
+          "assessment": "No load balancers or certificates found. Transit encryption evaluation not applicable.",
+          "context": null,
+          "caveats": [],
+          "recommendations": []
+        },
+        "scope": {
+          "environment": "test",
+          "services": [
+            "ALB",
+            "NLB",
+            "ACM"
+          ],
+          "regions": [
+            "us-east-2"
+          ],
+          "accounts": [],
+          "exclusions": []
+        },
+        "valid_from": "2026-02-15T23:57:04.297524+00:00",
+        "ttl_seconds": 3600,
+        "agent_id": "aws-transit-agent-v1",
+        "agent_version": "1.0.0",
+        "agent_certification": null,
+        "signature": "vt2p1LXewE/ayDlQMXE1brp2s+C1Wp1yE0jtzRS/CfCJ9jBk1AxFIDrpuvzTNSQOWHjyFEh1X5PIm2jYexFqBQ=="
+      }
+    ],
+    "evidence_summary": {
+      "total_items": 0,
+      "merkle_root": null,
+      "collection_window_start": null,
+      "collection_window_end": null,
+      "domains_covered": []
+    },
+    "composite_level": "CRITICAL",
+    "domain_scores": {
+      "data_protection.encryption": {
+        "level": "CRITICAL",
+        "confidence": 1,
+        "claims_satisfied": 0,
+        "claims_total": 1
+      }
+    },
+    "signer_id": "aws-transit-agent-v1",
+    "signature": "Xj5yT6cwB8yd+63UuamhawscnPvziFWWhl4a8K2AK5cpXIlNc9JpPXXLuS5n7c7tOsDRetoid5zziWEJoNSlCQ=="
+  },
+  {
+    "envelope_id": "te-73e8e85175ee",
+    "schema_version": "1.0",
+    "generated_at": "2026-02-15T23:57:07.756600+00:00",
+    "valid_until": "2026-02-16T00:57:07.756600+00:00",
+    "ttl_seconds": 3600,
+    "subject": {
+      "organization": "killswitch-advisory",
+      "otvp_id": "otvp:org:killswitch-advisory",
+      "environment": "production"
+    },
+    "relying_party": null,
+    "query_ref": null,
+    "disclosure_level": "claims_only",
+    "claims": [
+      {
+        "claim_id": "cl-ac3bdc2bfc74",
+        "domain": "infrastructure.compute.vulnerability_management",
+        "assertion": "Vulnerability management is active with no unpatched critical findings",
+        "result": "NOT_SATISFIED",
+        "confidence": 1,
+        "evidence_refs": [
+          "ev-5ff0c3961837"
+        ],
+        "evidence_count": 1,
+        "opinion": {
+          "assessment": "No vulnerability management infrastructure detected.",
+          "context": null,
+          "caveats": [
+            "No vulnerability management tools detected"
+          ],
+          "recommendations": [
+            "Enable SSM Agent on EC2 instances for patch management",
+            "Activate Amazon Inspector for vulnerability scanning"
+          ]
+        },
+        "scope": {
+          "environment": "test",
+          "services": [
+            "SSM",
+            "Inspector"
+          ],
+          "regions": [
+            "us-east-2"
+          ],
+          "accounts": [],
+          "exclusions": []
+        },
+        "valid_from": "2026-02-15T23:57:07.756347+00:00",
+        "ttl_seconds": 3600,
+        "agent_id": "aws-vuln-agent-v1",
+        "agent_version": "1.0.0",
+        "agent_certification": null,
+        "signature": "kRRBRhkT1+zs39/VY7/ZwlHekhfuWgsxUekQ/H+3odWFbKdJnb4rNjLnk5FJYxUDfN7LY7LE6Kf+PK6MVqHGDQ=="
+      }
+    ],
+    "evidence_summary": {
+      "total_items": 1,
+      "merkle_root": "0aba143e72347901af44cc25e7047992a77c048a9e5d5fd4d17cfb4bdef0ea06",
+      "collection_window_start": "2026-02-15T23:57:07.751432+00:00",
+      "collection_window_end": "2026-02-15T23:57:07.751432+00:00",
+      "domains_covered": [
+        "infrastructure.compute.vulnerability_management"
+      ]
+    },
+    "composite_level": "CRITICAL",
+    "domain_scores": {
+      "infrastructure.compute": {
+        "level": "CRITICAL",
+        "confidence": 1,
+        "claims_satisfied": 0,
+        "claims_total": 1
+      }
+    },
+    "signer_id": "aws-vuln-agent-v1",
+    "signature": "hZ3Utlum8+KRmPhXCmBObA418CNT0W3H75IdnqJVkW/GOPQeyVSndh6fVXXPqljsLWJclwoHyQXWDpYIxVFzBw=="
+  },
+  {
+    "envelope_id": "te-d3ab67dea343",
+    "schema_version": "1.0",
+    "generated_at": "2026-02-15T23:57:09.704168+00:00",
+    "valid_until": "2026-02-16T00:57:09.704168+00:00",
+    "ttl_seconds": 3600,
+    "subject": {
+      "organization": "killswitch-advisory",
+      "otvp_id": "otvp:org:killswitch-advisory",
+      "environment": "production"
+    },
+    "relying_party": null,
+    "query_ref": null,
+    "disclosure_level": "claims_only",
+    "claims": [
+      {
+        "claim_id": "cl-a5b5d36c87cf",
+        "domain": "operational_resilience.backup.coverage",
+        "assertion": "All critical data stores have backup protection configured",
+        "result": "NOT_SATISFIED",
+        "confidence": 1,
+        "evidence_refs": [
+          "ev-0579c1952c4f",
+          "ev-b094111112ff",
+          "ev-bbb7ba607e61"
+        ],
+        "evidence_count": 3,
+        "opinion": {
+          "assessment": "Only 0/2 data stores have backup coverage.",
+          "context": null,
+          "caveats": [
+            "No AWS Backup plans configured",
+            "EBS vol-022d3b7b946de5cde: no backup configured",
+            "EBS vol-0f3fa7c211a79121e: no backup configured"
+          ],
+          "recommendations": [
+            "Create an AWS Backup plan covering all critical resources",
+            "Add backup coverage for: EBS:vol-022d3b7b946de5cde, EBS:vol-0f3fa7c211a79121e"
+          ]
+        },
+        "scope": {
+          "environment": "test",
+          "services": [
+            "AWS Backup",
+            "RDS",
+            "EBS"
+          ],
+          "regions": [
+            "us-east-2"
+          ],
+          "accounts": [],
+          "exclusions": []
+        },
+        "valid_from": "2026-02-15T23:57:09.703992+00:00",
+        "ttl_seconds": 3600,
+        "agent_id": "aws-backup-agent-v1",
+        "agent_version": "1.0.0",
+        "agent_certification": null,
+        "signature": "XhdvVYNGmFfWYIgoDt0T7DKxg3mwyzhb8Ut/pCc4q6z8CMsiQWwFzNA9x72U3HKhIylAGKLh5xnQIS650Zc6Cg=="
+      }
+    ],
+    "evidence_summary": {
+      "total_items": 3,
+      "merkle_root": "0565b1f26700288e96e7f0d83496ef054a61aa1c08d6e9f01fc79386d90c6ec4",
+      "collection_window_start": "2026-02-15T23:57:08.337675+00:00",
+      "collection_window_end": "2026-02-15T23:57:09.692091+00:00",
+      "domains_covered": [
+        "operational_resilience.backup.coverage"
+      ]
+    },
+    "composite_level": "CRITICAL",
+    "domain_scores": {
+      "operational_resilience.backup": {
+        "level": "CRITICAL",
+        "confidence": 1,
+        "claims_satisfied": 0,
+        "claims_total": 1
+      }
+    },
+    "signer_id": "aws-backup-agent-v1",
+    "signature": "qpBP3elxJpca7/YOvCPs+bFF/s1lxQGuoDPvPuf3v1qPnR0ZK8cOxr9Pqa+8eExE8tOKW/00rmZj2vtvW1TLDg=="
+  }
+]

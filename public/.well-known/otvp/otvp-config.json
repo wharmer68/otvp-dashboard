@@ -1,0 +1,34 @@
+{
+  "otvp_version": "1.0",
+  "otvp_id": "otvp:org:killswitch-advisory",
+  "organization": "Killswitch Advisory",
+  "contact_email": "security@killswitch-advisory.com",
+  "public_keys": [
+    {
+      "kid": "killswitch-2026-primary",
+      "algorithm": "Ed25519",
+      "public_key": "MCowBQYDK2VwAyEAx2XpVUgWNeYfGJhV1p0k8kR2J7QzGWL4N8vJqHMbUno=",
+      "valid_from": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "endpoints": {
+    "envelopes": "/.well-known/otvp/envelopes.json",
+    "latest": "/.well-known/otvp/envelopes/latest.json",
+    "domains": "/.well-known/otvp/envelopes.json?domain={domain}"
+  },
+  "domains_covered": [
+    "data_protection.encryption.at_rest",
+    "data_protection.encryption.key_management",
+    "data_protection.encryption.in_transit",
+    "identity_and_access.authentication.mfa_enforcement",
+    "identity_and_access.lifecycle.provisioning",
+    "identity_and_access.authorization.least_privilege",
+    "network_security.segmentation",
+    "network_security.ingress_controls",
+    "detection_and_response.logging.completeness",
+    "infrastructure.compute.vulnerability_management",
+    "operational_resilience.backup.coverage"
+  ],
+  "retention_days": 365,
+  "refresh_interval_seconds": 3600
+}
