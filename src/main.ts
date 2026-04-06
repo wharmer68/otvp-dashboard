@@ -11,7 +11,7 @@ import type { Vendor } from './types/vendor';
 import { addRoute, startRouter, navigate } from './router';
 import { appShellHTML } from './components/app-shell';
 import { getLocalEnvelopes, setLocalEnvelopes, addLocalEnvelope } from './services/envelope-store';
-import { getVendors, getLocalVendors } from './services/vendor-store';
+import { getVendors, getLocalVendors, createVendor } from './services/vendor-store';
 import { computeRiskAssessment } from './services/risk-engine';
 import { logAudit } from './services/audit-log';
 
@@ -30,9 +30,36 @@ let riskHistory: RiskAssessment[] = [];
 
 // --- Initialization ---
 async function init(): Promise<void> {
-  // Load vendors
-  const vendors = await getVendors();
-  if (vendors.length > 0 && !vendors.find(v => v.id === activeVendorId)) {
+  // Load vendors — seed a default if DB is empty
+  let vendors: Vendor[];
+  try {
+    vendors = await getVendors();
+  } catch (err) {
+    console.warn('Failed to fetch vendors from Supabase, using local fallback:', err);
+    vendors = getLocalVendors();
+  }
+
+  if (vendors.length === 0) {
+    // DB is empty — seed the default vendor
+    try {
+      const seeded = await createVendor({
+        name: 'killswitch-advisory',
+        otvp_id: 'otvp:org:killswitch-advisory',
+        environment: 'production',
+        cloud_provider: 'aws',
+        region: 'us-east-2',
+        config: {},
+        is_active: true,
+      });
+      vendors = [seeded];
+      await logAudit('vendor.created', { vendor_id: seeded.id, details: { name: seeded.name, seeded: true } });
+    } catch (err) {
+      console.warn('Failed to seed vendor, using local fallback:', err);
+      vendors = getLocalVendors();
+    }
+  }
+
+  if (vendors.length > 0) {
     activeVendorId = vendors[0].id;
   }
 
@@ -71,7 +98,13 @@ async function init(): Promise<void> {
 async function loadMockData(): Promise<void> {
   // Run all mock agents to generate demo envelopes
   const runner = createRunner();
-  const vendor = getLocalVendors()[0];
+  let vendors: Vendor[];
+  try {
+    vendors = await getVendors();
+  } catch {
+    vendors = getLocalVendors();
+  }
+  const vendor = vendors[0];
   if (!vendor) return;
 
   const result = await runner.run({
