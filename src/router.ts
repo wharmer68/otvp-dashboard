@@ -50,11 +50,7 @@ export function startRouter(): void {
             console.error(`Route error [${route.view}]:`, err);
           }
         }
-        // Update nav highlights
-        document.querySelectorAll('.nav-link').forEach(el => {
-          const href = el.getAttribute('data-route') || '';
-          el.classList.toggle('active', hash === href || (href !== '/' && hash.startsWith(href)));
-        });
+        updateNavHighlights(hash);
         return;
       }
     }
@@ -62,6 +58,34 @@ export function startRouter(): void {
     navigate('/');
   };
 
+  // Use both hashchange and click interception for reliable routing
   window.addEventListener('hashchange', handleRoute);
+
+  // Intercept nav link clicks to ensure routing works even when
+  // the hash doesn't change (e.g. clicking the same link twice)
+  document.addEventListener('click', (e) => {
+    const link = (e.target as HTMLElement).closest('a.nav-link');
+    if (link) {
+      const href = link.getAttribute('href');
+      if (href?.startsWith('#')) {
+        e.preventDefault();
+        const path = href.slice(1);
+        if (window.location.hash.slice(1) === path) {
+          // Same hash — hashchange won't fire, so handle manually
+          handleRoute();
+        } else {
+          window.location.hash = path;
+        }
+      }
+    }
+  });
+
   handleRoute();
+}
+
+function updateNavHighlights(hash: string): void {
+  document.querySelectorAll('.nav-link').forEach(el => {
+    const route = el.getAttribute('data-route') || '';
+    el.classList.toggle('active', hash === route || (route !== '/' && hash.startsWith(route)));
+  });
 }
