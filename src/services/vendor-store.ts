@@ -1,6 +1,28 @@
 import type { Vendor } from '../types/vendor';
 import { getSupabase } from './supabase';
 
+/** Normalize a DB row to a full Vendor, providing defaults for migration-002 fields */
+function normalizeVendor(row: Record<string, unknown>): Vendor {
+  return {
+    id: row.id as string,
+    domain: (row.domain as string) || '',
+    name: (row.name as string) || 'Unknown',
+    otvp_id: (row.otvp_id as string) || '',
+    config_url: (row.config_url as string) || '',
+    public_key_kid: (row.public_key_kid as string) || '',
+    public_key: (row.public_key as string) || '',
+    dns_verified: (row.dns_verified as boolean) ?? false,
+    domains_covered: (row.domains_covered as string[]) || [],
+    refresh_interval_seconds: (row.refresh_interval_seconds as number) || 3600,
+    submission_method: (row.submission_method as Vendor['submission_method']) || 'discovery',
+    last_fetched_at: (row.last_fetched_at as string) || null,
+    last_envelope_at: (row.last_envelope_at as string) || null,
+    is_active: (row.is_active as boolean) ?? true,
+    created_at: (row.created_at as string) || new Date().toISOString(),
+    updated_at: (row.updated_at as string) || new Date().toISOString(),
+  };
+}
+
 // In-memory store for local-only mode
 let localVendors: Vendor[] = [
   {
@@ -40,7 +62,7 @@ export async function getVendors(): Promise<Vendor[]> {
   if (sb) {
     const { data, error } = await sb.from('vendors').select('*').order('name');
     if (error) throw error;
-    return (data || []) as Vendor[];
+    return (data || []).map((row: Record<string, unknown>) => normalizeVendor(row));
   }
   return localVendors;
 }
@@ -50,7 +72,7 @@ export async function getActiveVendors(): Promise<Vendor[]> {
   if (sb) {
     const { data, error } = await sb.from('vendors').select('*').eq('is_active', true).order('name');
     if (error) throw error;
-    return (data || []) as Vendor[];
+    return (data || []).map((row: Record<string, unknown>) => normalizeVendor(row));
   }
   return localVendors.filter(v => v.is_active);
 }
@@ -60,7 +82,7 @@ export async function getVendorById(id: string): Promise<Vendor | null> {
   if (sb) {
     const { data, error } = await sb.from('vendors').select('*').eq('id', id).single();
     if (error) return null;
-    return data as Vendor;
+    return normalizeVendor(data as Record<string, unknown>);
   }
   return localVendors.find(v => v.id === id) || null;
 }
@@ -91,7 +113,7 @@ export async function updateVendor(id: string, updates: Partial<Vendor>): Promis
       .select()
       .single();
     if (error) throw error;
-    return data as Vendor;
+    return normalizeVendor(data as Record<string, unknown>);
   }
   const idx = localVendors.findIndex(v => v.id === id);
   if (idx === -1) return null;

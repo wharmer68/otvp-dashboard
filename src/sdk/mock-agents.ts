@@ -29,7 +29,22 @@ makeAgent(
     assertion: 'All customer-managed KMS keys have automatic rotation enabled',
     result: 'SATISFIED',
     confidence: 1.0,
-    evidence_items: [],
+    evidence_items: [
+      {
+        evidence_id: 'ev-kms-001',
+        resource_arn: 'arn:aws:kms:us-east-2:294137048789:key/aws-managed-s3',
+        resource_type: 'AWS::KMS::Key',
+        data: { key_manager: 'AWS', rotation_enabled: true, key_state: 'Enabled', description: 'Default key for S3' },
+        collected_at: '2026-02-15T23:55:00Z',
+      },
+      {
+        evidence_id: 'ev-kms-002',
+        resource_arn: 'arn:aws:kms:us-east-2:294137048789:key/aws-managed-ebs',
+        resource_type: 'AWS::KMS::Key',
+        data: { key_manager: 'AWS', rotation_enabled: true, key_state: 'Enabled', description: 'Default key for EBS' },
+        collected_at: '2026-02-15T23:55:00Z',
+      },
+    ],
     opinion: {
       assessment: 'No customer-managed keys found. 2 AWS-managed key(s) in use (auto-rotating).',
       context: null,
@@ -63,7 +78,15 @@ makeAgent(
     assertion: 'No high-risk ports are exposed to the public internet via security groups',
     result: 'SATISFIED',
     confidence: 1.0,
-    evidence_items: [],
+    evidence_items: [
+      {
+        evidence_id: 'ev-net-001',
+        resource_arn: 'arn:aws:ec2:us-east-2:294137048789:security-group/sg-0a1b2c3d4e5f6g7h8',
+        resource_type: 'AWS::EC2::SecurityGroup',
+        data: { group_name: 'default', high_risk_ports_open: false, inbound_rules: 2, outbound_rules: 1 },
+        collected_at: '2026-02-15T23:55:01Z',
+      },
+    ],
     opinion: {
       assessment: 'All 1 security group(s) properly segmented. No high-risk ports exposed to internet.',
       context: null,
@@ -95,7 +118,15 @@ makeAgent(
     assertion: 'All public-facing resources have controlled ingress with WAF protection on internet-facing load balancers',
     result: 'SATISFIED',
     confidence: 1.0,
-    evidence_items: [],
+    evidence_items: [
+      {
+        evidence_id: 'ev-ing-001',
+        resource_arn: 'arn:aws:ec2:us-east-2:294137048789:vpc/vpc-0f4888f54d2296acb',
+        resource_type: 'AWS::EC2::VPC',
+        data: { public_facing_sgs: 0, internet_gateways: 0, nat_gateways: 0 },
+        collected_at: '2026-02-15T23:55:02Z',
+      },
+    ],
     opinion: {
       assessment: 'No public-facing security groups or internet-facing load balancers found. Attack surface is minimal. 100% of resources verified.',
       context: null,
@@ -127,7 +158,22 @@ makeAgent(
     assertion: 'No IAM users or roles have overprivileged admin access attached directly',
     result: 'SATISFIED',
     confidence: 1.0,
-    evidence_items: [],
+    evidence_items: [
+      {
+        evidence_id: 'ev-priv-001',
+        resource_arn: 'arn:aws:iam::294137048789:role/otvp-lambda-exec',
+        resource_type: 'AWS::IAM::Role',
+        data: { has_admin_policy: false, attached_policies: 2, inline_policies: 0 },
+        collected_at: '2026-02-15T23:55:03Z',
+      },
+      {
+        evidence_id: 'ev-priv-002',
+        resource_arn: 'arn:aws:iam::294137048789:role/otvp-ecs-task',
+        resource_type: 'AWS::IAM::Role',
+        data: { has_admin_policy: false, attached_policies: 1, inline_policies: 1 },
+        collected_at: '2026-02-15T23:55:03Z',
+      },
+    ],
     opinion: {
       assessment: 'All 4 IAM principal(s) follow least privilege. No admin policies directly attached.',
       context: null,
@@ -159,7 +205,29 @@ makeAgent(
     assertion: 'All production storage resources are encrypted at rest',
     result: 'PARTIAL',
     confidence: 0.5,
-    evidence_items: [],
+    evidence_items: [
+      {
+        evidence_id: 'ev-enc-001',
+        resource_arn: 'arn:aws:rds:us-east-2:294137048789:db:otvp-prod-analytics',
+        resource_type: 'AWS::RDS::DBInstance',
+        data: { encryption_enabled: false, engine: 'postgres', storage_type: 'gp3' },
+        collected_at: '2026-02-15T23:55:04Z',
+      },
+      {
+        evidence_id: 'ev-enc-002',
+        resource_arn: 'arn:aws:s3:::otvp-prod-logs',
+        resource_type: 'AWS::S3::Bucket',
+        data: { encryption_enabled: false, versioning: true, public_access_blocked: true },
+        collected_at: '2026-02-15T23:55:04Z',
+      },
+      {
+        evidence_id: 'ev-enc-003',
+        resource_arn: 'arn:aws:ec2:us-east-2:294137048789:volume/vol-022d3b7b946de5cde',
+        resource_type: 'AWS::EC2::Volume',
+        data: { encryption_enabled: false, size_gb: 100, volume_type: 'gp3' },
+        collected_at: '2026-02-15T23:55:04Z',
+      },
+    ],
     opinion: {
       assessment: '3/6 resources satisfy encryption_enabled. 3 non-compliant.',
       context: null,
@@ -193,7 +261,22 @@ makeAgent(
     assertion: 'All IAM users with console access have MFA enabled',
     result: 'PARTIAL',
     confidence: 0.5,
-    evidence_items: [],
+    evidence_items: [
+      {
+        evidence_id: 'ev-mfa-001',
+        resource_arn: 'arn:aws:iam::294137048789:user/otvp-dev-alice',
+        resource_type: 'AWS::IAM::User',
+        data: { console_access: true, mfa_enabled: true, mfa_type: 'virtual' },
+        collected_at: '2026-02-15T23:55:05Z',
+      },
+      {
+        evidence_id: 'ev-mfa-002',
+        resource_arn: 'arn:aws:iam::294137048789:user/otvp-dev-bob',
+        resource_type: 'AWS::IAM::User',
+        data: { console_access: true, mfa_enabled: false, mfa_type: null },
+        collected_at: '2026-02-15T23:55:05Z',
+      },
+    ],
     opinion: {
       assessment: '1/2 console user(s) have MFA enabled.',
       context: null,
@@ -231,7 +314,21 @@ makeAgent(
     assertion: 'Audit logging is enabled with multi-region CloudTrail and VPC flow logs on all VPCs',
     result: 'NOT_SATISFIED',
     confidence: 1.0,
-    evidence_items: [],
+    evidence_items: [
+      {
+        evidence_id: 'ev-log-001',
+        resource_type: 'AWS::CloudTrail::Trail',
+        data: { trail_found: false, is_multi_region: false, log_file_validation: false },
+        collected_at: '2026-02-15T23:55:06Z',
+      },
+      {
+        evidence_id: 'ev-log-002',
+        resource_arn: 'arn:aws:ec2:us-east-2:294137048789:vpc/vpc-0f4888f54d2296acb',
+        resource_type: 'AWS::EC2::VPC',
+        data: { vpc_name: 'unnamed', flow_logs_enabled: false },
+        collected_at: '2026-02-15T23:55:06Z',
+      },
+    ],
     opinion: {
       assessment: 'Only 0/2 logging checks passed. Significant gaps in audit logging coverage.',
       context: null,
@@ -269,7 +366,29 @@ makeAgent(
     assertion: 'All IAM accounts are actively used with no stale credentials',
     result: 'NOT_SATISFIED',
     confidence: 1.0,
-    evidence_items: [],
+    evidence_items: [
+      {
+        evidence_id: 'ev-lc-001',
+        resource_arn: 'arn:aws:iam::294137048789:user/otvp-dev-alice',
+        resource_type: 'AWS::IAM::User',
+        data: { last_login_days_ago: 0, console_access: true, status: 'stale' },
+        collected_at: '2026-02-15T23:55:07Z',
+      },
+      {
+        evidence_id: 'ev-lc-002',
+        resource_arn: 'arn:aws:iam::294137048789:user/otvp-dev-bob',
+        resource_type: 'AWS::IAM::User',
+        data: { last_login_days_ago: 0, console_access: true, status: 'stale' },
+        collected_at: '2026-02-15T23:55:07Z',
+      },
+      {
+        evidence_id: 'ev-lc-003',
+        resource_arn: 'arn:aws:iam::294137048789:user/otvp-ci-deploy',
+        resource_type: 'AWS::IAM::User',
+        data: { last_login_days_ago: null, console_access: false, status: 'healthy', programmatic_only: true },
+        collected_at: '2026-02-15T23:55:07Z',
+      },
+    ],
     opinion: {
       assessment: 'Only 1/3 IAM accounts are healthy.',
       context: null,
@@ -305,7 +424,14 @@ makeAgent(
     assertion: 'All load balancers enforce TLS 1.2+ and certificates are valid',
     result: 'NOT_APPLICABLE',
     confidence: 1.0,
-    evidence_items: [],
+    evidence_items: [
+      {
+        evidence_id: 'ev-tls-001',
+        resource_type: 'AWS::ElasticLoadBalancingV2::LoadBalancer',
+        data: { load_balancers_found: 0, certificates_found: 0, scan_complete: true },
+        collected_at: '2026-02-15T23:55:08Z',
+      },
+    ],
     opinion: {
       assessment: 'No load balancers or certificates found. Transit encryption evaluation not applicable.',
       context: null,
@@ -337,7 +463,14 @@ makeAgent(
     assertion: 'Vulnerability management is active with no unpatched critical findings',
     result: 'NOT_SATISFIED',
     confidence: 1.0,
-    evidence_items: [],
+    evidence_items: [
+      {
+        evidence_id: 'ev-vuln-001',
+        resource_type: 'AWS::Inspector2::Inspector',
+        data: { inspector_enabled: false, ssm_managed_instances: 0, scan_complete: true },
+        collected_at: '2026-02-15T23:55:09Z',
+      },
+    ],
     opinion: {
       assessment: 'No vulnerability management infrastructure detected.',
       context: null,
@@ -372,7 +505,22 @@ makeAgent(
     assertion: 'All critical data stores have backup protection configured',
     result: 'NOT_SATISFIED',
     confidence: 1.0,
-    evidence_items: [],
+    evidence_items: [
+      {
+        evidence_id: 'ev-bak-001',
+        resource_arn: 'arn:aws:ec2:us-east-2:294137048789:volume/vol-022d3b7b946de5cde',
+        resource_type: 'AWS::EC2::Volume',
+        data: { backup_plan_attached: false, size_gb: 100, volume_type: 'gp3' },
+        collected_at: '2026-02-15T23:55:10Z',
+      },
+      {
+        evidence_id: 'ev-bak-002',
+        resource_arn: 'arn:aws:ec2:us-east-2:294137048789:volume/vol-0f3fa7c211a79121e',
+        resource_type: 'AWS::EC2::Volume',
+        data: { backup_plan_attached: false, size_gb: 50, volume_type: 'gp3' },
+        collected_at: '2026-02-15T23:55:10Z',
+      },
+    ],
     opinion: {
       assessment: 'Only 0/2 data stores have backup coverage.',
       context: null,

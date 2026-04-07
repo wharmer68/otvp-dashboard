@@ -116,17 +116,15 @@ async function loadInitialEnvelopes(vendor?: Vendor): Promise<void> {
 
   // Try fetching from the vendor's published endpoint
   try {
-    const endpointPath = '/.well-known/otvp/envelopes/latest.json';
-    const result = await fetchVendorEnvelopes(vendor.domain, endpointPath);
+    const result = await fetchVendorEnvelopes(vendor.domain);
 
     if (result.envelopes.length > 0) {
-      const envelopes = result.envelopes as TrustEnvelope[];
-      setLocalEnvelopes(envelopes);
-      const ra = computeRiskAssessment(envelopes, vendor.id);
+      setLocalEnvelopes(result.envelopes);
+      const ra = computeRiskAssessment(result.envelopes, vendor.id);
       riskHistory.push(ra);
       await logAudit('envelopes.fetched', {
         vendor_id: vendor.id,
-        details: { count: envelopes.length, source: vendor.domain },
+        details: { count: result.envelopes.length, source: vendor.domain },
       });
       return;
     }
@@ -209,14 +207,13 @@ async function fetchEnvelopesForVendor(vendorId: string): Promise<void> {
   </div>`;
 
   try {
-    const endpointPath = '/.well-known/otvp/envelopes/latest.json';
-    const result = await fetchVendorEnvelopes(vendor.domain, endpointPath);
+    const result = await fetchVendorEnvelopes(vendor.domain);
 
     if (result.error) {
       throw new Error(result.error);
     }
 
-    const envelopes = result.envelopes as TrustEnvelope[];
+    const envelopes = result.envelopes;
     setLocalEnvelopes(envelopes);
 
     // Update vendor fetch timestamp
