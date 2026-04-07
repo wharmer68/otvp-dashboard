@@ -74,35 +74,46 @@ export function renderVendors(
     const config = lastDiscovery.config;
     const activeKey = config.public_keys.find(k => !k.revoked) || config.public_keys[0];
 
-    const vendor = await createVendor({
-      domain: lastDiscovery.domain,
-      name: config.organization,
-      otvp_id: config.otvp_id,
-      config_url: `https://${lastDiscovery.domain}/.well-known/otvp/otvp-config.json`,
-      public_key_kid: activeKey.kid,
-      public_key: activeKey.public_key,
-      dns_verified: lastDiscovery.dns_verified,
-      domains_covered: config.domains_covered,
-      refresh_interval_seconds: config.refresh_interval_seconds,
-      submission_method: 'discovery',
-      last_fetched_at: null,
-      last_envelope_at: null,
-      is_active: true,
-    });
-
-    await logAudit('vendor.created', {
-      vendor_id: vendor.id,
-      details: {
+    try {
+      const vendor = await createVendor({
         domain: lastDiscovery.domain,
+        name: config.organization,
         otvp_id: config.otvp_id,
+        config_url: `https://${lastDiscovery.domain}/.well-known/otvp/otvp-config.json`,
         public_key_kid: activeKey.kid,
+        public_key: activeKey.public_key,
         dns_verified: lastDiscovery.dns_verified,
-      },
-    });
+        domains_covered: config.domains_covered,
+        refresh_interval_seconds: config.refresh_interval_seconds,
+        submission_method: 'discovery',
+        last_fetched_at: null,
+        last_envelope_at: null,
+        is_active: true,
+      });
 
-    showForm = false;
-    lastDiscovery = null;
-    onRefresh();
+      await logAudit('vendor.created', {
+        vendor_id: vendor.id,
+        details: {
+          domain: lastDiscovery.domain,
+          otvp_id: config.otvp_id,
+          public_key_kid: activeKey.kid,
+          dns_verified: lastDiscovery.dns_verified,
+        },
+      });
+
+      showForm = false;
+      lastDiscovery = null;
+      onRefresh();
+    } catch (err) {
+      const resultEl = document.getElementById('discovery-result');
+      if (resultEl) {
+        const msg = err instanceof Error ? err.message : String(err);
+        resultEl.innerHTML = `<div style="padding:16px;background:var(--color-red-dark);border:1px solid var(--color-red-border);border-radius:var(--radius-lg);margin-top:16px">
+          <div style="color:var(--color-red);font-size:13px;font-weight:600;margin-bottom:4px">Failed to add vendor</div>
+          <div style="color:#a1a1aa;font-size:12px">${msg}</div>
+        </div>`;
+      }
+    }
   };
 
   (window as any).__fetchEnvelopes = (vendorId: string) => {

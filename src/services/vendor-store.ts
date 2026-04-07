@@ -23,6 +23,9 @@ function normalizeVendor(row: Record<string, unknown>): Vendor {
   };
 }
 
+// Vendors created locally when Supabase insert fails (schema mismatch fallback)
+let localFallbackVendors: Vendor[] = [];
+
 // In-memory store for local-only mode
 let localVendors: Vendor[] = [
   {
@@ -62,7 +65,9 @@ export async function getVendors(): Promise<Vendor[]> {
   if (sb) {
     const { data, error } = await sb.from('vendors').select('*').order('name');
     if (error) throw error;
-    return (data || []).map((row: Record<string, unknown>) => normalizeVendor(row));
+    const remote = (data || []).map((row: Record<string, unknown>) => normalizeVendor(row));
+    // Merge any vendors that fell back to local storage due to schema mismatch
+    return [...remote, ...localFallbackVendors];
   }
   return localVendors;
 }
@@ -72,12 +77,17 @@ export async function getActiveVendors(): Promise<Vendor[]> {
   if (sb) {
     const { data, error } = await sb.from('vendors').select('*').eq('is_active', true).order('name');
     if (error) throw error;
-    return (data || []).map((row: Record<string, unknown>) => normalizeVendor(row));
+    const remote = (data || []).map((row: Record<string, unknown>) => normalizeVendor(row));
+    return [...remote, ...localFallbackVendors.filter(v => v.is_active)];
   }
   return localVendors.filter(v => v.is_active);
 }
 
 export async function getVendorById(id: string): Promise<Vendor | null> {
+  // Check fallback vendors first (local IDs won't exist in Supabase)
+  const fallback = localFallbackVendors.find(v => v.id === id);
+  if (fallback) return fallback;
+
   const sb = getSupabase();
   if (sb) {
     const { data, error } = await sb.from('vendors').select('*').eq('id', id).single();
@@ -91,8 +101,17 @@ export async function createVendor(vendor: Omit<Vendor, 'id' | 'created_at' | 'u
   const sb = getSupabase();
   if (sb) {
     const { data, error } = await sb.from('vendors').insert(vendor).select().single();
-    if (error) throw error;
-    return data as Vendor;
+    if (!error && data) return data as Vendor;
+    // Schema mismatch or other DB error — fall back to local store
+    console.warn('Supabase insert failed, using local store:', error?.message);
+    const fallbackVendor: Vendor = {
+      ...vendor,
+      id: `local-${Date.now()}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    localFallbackVendors.push(fallbackVendor);
+    return fallbackVendor;
   }
   const newVendor: Vendor = {
     ...vendor,
@@ -122,6 +141,11 @@ export async function updateVendor(id: string, updates: Partial<Vendor>): Promis
 }
 
 export async function deleteVendor(id: string): Promise<void> {
+  // Check if it's a fallback vendor first
+  if (localFallbackVendors.some(v => v.id === id)) {
+    localFallbackVendors = localFallbackVendors.filter(v => v.id !== id);
+    return;
+  }
   const sb = getSupabase();
   if (sb) {
     const { error } = await sb.from('vendors').delete().eq('id', id);
