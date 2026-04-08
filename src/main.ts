@@ -40,13 +40,16 @@ async function init(): Promise<void> {
     // DB is empty — seed the default demo vendor (discovered from .well-known)
     try {
       const seeded = await createVendor({
-        domain: 'killswitch-advisory.com',
-        name: 'Killswitch Advisory',
-        otvp_id: 'otvp:org:killswitch-advisory',
+        domain: 'otvp.dev',
+        name: '4Horsemen',
+        otvp_id: 'otvp:org:4horsemen',
         config_url: '/.well-known/otvp/otvp-config.json',
-        public_key_kid: 'killswitch-2026-primary',
-        public_key: 'MCowBQYDK2VwAyEAx2XpVUgWNeYfGJhV1p0k8kR2J7QzGWL4N8vJqHMbUno=',
+        public_key_kid: 'otvp-dev-2026-primary',
+        public_key: 'rhObwAgyTZBOMFGMteu8E0bB2hUWIiwxKoXbqCpfBxY=',
         dns_verified: false,
+        dns_verified_at: null,
+        dns_fingerprint: null,
+        dns_kid: null,
         domains_covered: [
           'data_protection.encryption.at_rest',
           'data_protection.encryption.key_management',

@@ -1,5 +1,6 @@
 import type { OtvpConfig, DiscoveryResult } from '../types/vendor';
 import type { TrustEnvelope, Claim, CompositeLevel, ClaimResult } from '../types/envelope';
+import { verifyDnsTxt } from './dns-verify';
 
 /**
  * Control ID → dashboard domain mapping.
@@ -106,11 +107,13 @@ export async function discoverVendor(domain: string): Promise<DiscoveryResult> {
         // Dashboard-native otvp-config.json
         const validation = validateConfig(raw);
         if (!validation.valid) continue;
+        const config = raw as OtvpConfig;
+        const dnsResult = await verifyDnsTxt(cleanDomain, config);
         return {
           success: true,
           domain: cleanDomain,
-          config: raw as OtvpConfig,
-          dns_verified: false,
+          config,
+          dns_verified: dnsResult.verified,
           discovered_at: now,
         };
       }
@@ -118,11 +121,12 @@ export async function discoverVendor(domain: string): Promise<DiscoveryResult> {
       if (isSiteManifest(raw)) {
         // Test site manifest.json — convert to OtvpConfig
         const config = manifestToConfig(raw as SiteManifest, cleanDomain);
+        const dnsResult = await verifyDnsTxt(cleanDomain, config);
         return {
           success: true,
           domain: cleanDomain,
           config,
-          dns_verified: false,
+          dns_verified: dnsResult.verified,
           discovered_at: now,
         };
       }
@@ -152,7 +156,7 @@ export function resolveBaseUrl(domain: string, path: string): string {
     return path;
   }
   // Known demo / dev domains — serve from same origin
-  if (domain === 'demo.otvp.dev' || domain === 'killswitch-advisory.com' || domain === 'otvp.dev') {
+  if (domain === 'demo.otvp.dev' || domain === '4horsemen.dev' || domain === 'otvp.dev') {
     return path;
   }
   return `https://${domain}${path}`;

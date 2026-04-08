@@ -62,6 +62,9 @@ export interface Vendor {
   public_key_kid: string;
   public_key: string;
   dns_verified: boolean;
+  dns_verified_at: string | null;
+  dns_fingerprint: string | null;
+  dns_kid: string | null;
   domains_covered: string[];
   refresh_interval_seconds: number;
   submission_method: 'discovery' | 'upload' | 'registry';
